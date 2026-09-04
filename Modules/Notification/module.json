@@ -1,0 +1,15 @@
+{
+    "name": "Notification",
+    "alias": "module_notification",
+    "description": "统一消息通知系统，整合短信、邮件、推送等多渠道",
+    "keywords": ["notification", "message", "sms", "mail", "push"],
+    "priority": 30,
+    "module_type": "service",
+    "module_requires": ["User1", "ABase"],
+    "providers": [
+        "Modules\\Notification\\Providers\\NotificationServiceProvider",
+        "Modules\\Notification\\Providers\\RouteServiceProvider"
+    ],
+    "files": [],
+    "migrations": true
+}

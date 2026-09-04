@@ -1,0 +1,24 @@
+{
+    "name": "FeatureSms",
+    "alias": "feature-sms",
+    "description": "短信功能模块，提供短信验证码发送、验证等功能。包含 Admin 后台管理。",
+    "keywords": [
+        "sms",
+        "验证码",
+        "短信",
+        "admin",
+        "dcat"
+    ],
+    "priority": 0,
+    "providers": [
+        "Modules\\FeatureSms\\Providers\\FeatureSmsServiceProvider"
+    ],
+    "files": [],
+    "migration": true,
+    "assets": [],
+    "requires": [],
+    "migrations": {
+        "path": "Database/Migrations",
+        "namespace": "Modules\\FeatureSms\\Database\\Migrations"
+    }
+}

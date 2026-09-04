@@ -1,0 +1,11 @@
+{
+    "name": "FeatureExcelDemo",
+    "alias": "featureexceldemo",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FeatureExcelDemo\\Providers\\FeatureExcelDemoServiceProvider"
+    ],
+    "files": []
+}

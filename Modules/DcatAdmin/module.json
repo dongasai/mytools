@@ -1,0 +1,12 @@
+{
+    "name": "DcatAdmin",
+    "alias": "module_dcatadmin",
+    "description": "Dcat Admin 功能模块，提供后台管理、日志记录、缓存管理等功能",
+    "keywords": ["dcat", "admin", "backend", "management", "log", "cache"],
+    "priority": 100,
+    "providers": [
+        "Modules\\DcatAdmin\\Providers\\DcatAdminServiceProvider",
+        "Modules\\DcatAdmin\\Providers\\RouteServiceProvider"
+    ],
+    "files": []
+}

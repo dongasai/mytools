@@ -1,0 +1,11 @@
+{
+    "name": "FeatureAi",
+    "alias": "featureai",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FeatureAi\\Providers\\FeatureAiServiceProvider"
+    ],
+    "files": []
+}

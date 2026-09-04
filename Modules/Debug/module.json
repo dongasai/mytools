@@ -1,0 +1,11 @@
+{
+    "name": "Debug",
+    "alias": "debug",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Debug\\Providers\\DebugServiceProvider"
+    ],
+    "files": []
+}

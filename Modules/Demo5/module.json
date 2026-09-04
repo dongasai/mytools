@@ -1,0 +1,19 @@
+{
+    "name": "Demo5",
+    "alias": "demo5",
+    "description": "Demo5模块 - 单模块全栈架构，包含基础业务逻辑、DcatAdmin后台管理、RESTful API 和 Proto API",
+    "keywords": ["demo5", "blog", "posts", "comments", "admin", "api", "proto", "protobuf"],
+    "priority": 30,
+    "providers": [
+        "Modules\\Demo5\\Providers\\Demo5ServiceProvider",
+        "Modules\\Demo5\\Providers\\RouteServiceProvider",
+        "Modules\\Demo5\\Providers\\EventServiceProvider",
+        "Modules\\Demo5\\Providers\\HookServiceProvider"
+    ],
+    "files": [],
+    "module_type": "base",
+    "dcat_admin": true,
+    "api": true,
+    "api_proto": true,
+    "module_requires": ["User1"]
+}

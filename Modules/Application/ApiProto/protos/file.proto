@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package application.file;
+
+option php_namespace = "Modules\\ApiProto\\Protobuf\\Application\\File";
+option go_package = "github.com/shandong-ziyou/dailian/proto/application/file";
+option java_multiple_files = true;
+option java_package = "com.shandong.ziyou.dailian.proto.application.file";
+
+import "ApiProto/common.proto";
+
+// ============================================================
+// 文件上传 API Proto 定义
+// ============================================================
+
+// ---- 文件上传（图片/视频） ----
+
+// /api/proto/application/file/upload
+message ApplicationFileUploadRequest {
+  bytes file_data = 1;      // 文件内容（bytes）
+  string file_name = 2;     // 文件名（含扩展名）
+  string file_type = 3;     // 文件类型（image/video/file）
+  bool private = 4;         // 是否私有（仅对图片有效，默认false）
+}
+
+message ApplicationFileUploadResponse {
+  ApiProto.Common.BaseResponse base = 1;
+  ApplicationFileUploadData data = 2;
+}
+
+message ApplicationFileUploadData {
+  int64 file_id = 1;        // 文件ID
+  string file_url = 2;      // 文件URL
+  string file_path = 3;     // 文件路径
+}
+
+// ---- 临时文件上传 ----
+
+// /api/proto/application/file/upload_temporary
+message ApplicationFileUploadTemporaryRequest {
+  bytes file_data = 1;      // 文件内容（bytes）
+  string file_ext = 2;      // 文件扩展名（不含点，如：jpg、png、pdf）
+}
+
+message ApplicationFileUploadTemporaryResponse {
+  ApiProto.Common.BaseResponse base = 1;
+  ApplicationFileUploadTemporaryData data = 2;
+}
+
+message ApplicationFileUploadTemporaryData {
+  string file_path = 1;     // 临时文件路径
+  string file_url = 2;      // 临时文件下载URL
+}

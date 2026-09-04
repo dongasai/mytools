@@ -1,0 +1,13 @@
+{
+    "name": "AFile",
+    "alias": "afile",
+    "description": "文件管理系统 - 提供文件和图片的上传、下载、管理功能",
+    "keywords": ["file", "image", "upload", "storage", "文件管理"],
+    "priority": 0,
+    "providers": [
+        "Modules\\AFile\\Providers\\FileServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}

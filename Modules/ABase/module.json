@@ -1,0 +1,23 @@
+{
+    "name": "ABase",
+    "alias": "module_abase",
+    "description": "提供基础功能供其他模块使用",
+    "keywords": [
+        "base",
+        "core",
+        "foundation"
+    ],
+    "priority": 0,
+    "providers": [
+        "Modules\\ABase\\Providers\\ABaseServiceProvider",
+        "Modules\\ABase\\Providers\\EventServiceProvider",
+        "Modules\\ABase\\Providers\\HookServiceProvider"
+    ],
+    "files": [],
+    "module_type": "base",
+    "migration": {
+        "seeds": [
+            "Modules\\ABase\\Database\\Seeders\\BaseDatabaseSeeder"
+        ]
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "name": "FeatureExcel",
+    "alias": "feature_excel",
+    "description": "Excel导入导出引擎模块 - 提供模板化数据导入导出能力",
+    "keywords": ["excel", "csv", "import", "export", "导入", "导出"],
+    "priority": 5,
+    "providers": [
+        "Modules\\FeatureExcel\\Providers\\FeatureExcelServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}

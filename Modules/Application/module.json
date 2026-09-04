@@ -1,0 +1,16 @@
+{
+    "name": "Application",
+    "alias": "application",
+    "description": "应用模块 - 包含应用通用定义，表前缀 application_",
+    "keywords": [],
+    "active": 1,
+    "order": 3,
+    "providers": [
+        "Modules\\Application\\Providers\\ApplicationServiceProvider",
+        "Modules\\Application\\Providers\\HookServiceProvider",
+        "Modules\\Application\\Providers\\RouteServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}
