@@ -1,0 +1,42 @@
+{
+    "name": "Xiaoshuo Dev Container",
+    "shutdownAction": "none",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "devcontainer",
+    "workspaceFolder": "${localWorkspaceFolder}",
+    "remoteUser": "php",
+    "postCreateCommand": "sudo ln -sf /home/php /home/${localEnv:USER} || true && composer install --ignore-platform-reqs && composer devcontainer-setup",
+    "postStartCommand": "sudo service apache2 start && sudo service supervisor start && sudo service ssh start",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "mehedidracula.php-constructor",
+                "mikestead.dotenv",
+                "EditorConfig.EditorConfig",
+                "onecentlin.laravel-blade",
+                "onecentlin.laravel5-snippets",
+                "amiralizadeh9480.laravel-extra-intellisense",
+                "stef-k.laravel-goto-controller",
+                "ryannaddy.laravel-artisan",
+                "DavidAnssports.oftherestart",
+                "Anthropic.claude-code",
+                "moshfeu.compare-folders"
+            ],
+            "settings": {
+                "intelephense.environment.phpVersion": "8.3",
+                "intelephense.files.associations": [
+                    "*.php"
+                ],
+                "files.exclude": {
+                    "**/.git": true,
+                    "**/.DS_Store": true,
+                    "**/vendor": false
+                }
+            }
+        }
+    },
+    "features": {
+        
+    }
+}

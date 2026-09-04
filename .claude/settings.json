@@ -1,0 +1,31 @@
+{
+    "env": {
+        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0"
+    },
+    "deny": [
+      "git pull --rebase",
+        "Bash(mysql)"
+    ],
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Write|Edit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "node .claude/helpers/jinzhiappedit.js"
+                    }
+                ]
+            },
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "node .claude/helpers/bash-protect.js"
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "skill_name": "admin-menu",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我的 Im 模块还没有后台菜单，帮我加上。Im 模块的路由前缀是 module_im，有一个 dashboard 页面和 conversation 列表页面。",
+      "expected_output": "在 Modules/Im/config/admin_menu.php 创建配置文件，选择未占用的 ID 段，包含父菜单和两个子菜单，并告知同步命令",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Account 模块的\"账户管理\"菜单我想改成\"账号中心\"，怎么操作？",
+      "expected_output": "说明修改 config/admin_menu.php 中对应菜单的 title 字段，然后用 --force 参数同步",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我要新建一个 GameTask 模块，需要给它加上后台菜单。模块路由前缀是 module_gametask，需要：任务列表、任务分类、任务统计三个页面。",
+      "expected_output": "选取 ID 段（如 40000+），创建 admin_menu.php，包含父菜单+三个子菜单，给出完整配置代码和同步命令",
+      "files": []
+    }
+  ]
+}
