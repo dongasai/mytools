@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  app:
+    image: github.com/dongasai/mytool:latest
+    pull_policy: always
+    container_name: mytool
+    restart: unless-stopped
+    # http 映射端口 34433
+    ports:
+      - "34433:80"

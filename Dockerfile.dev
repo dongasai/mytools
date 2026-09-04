@@ -1,0 +1,129 @@
+# 开发容器 - 基于 Apache + PHP 8.4 + Xdebug + Node.js
+FROM php:8.4-apache
+
+# 设置时区为北京时间
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 设置工作目录
+WORKDIR /var/www/html
+
+# 配置国内镜像加速器
+RUN echo "🔧 配置国内镜像加速器..." && \
+    # 替换 apt 源为阿里云镜像
+    sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    echo "✅ APT 源已切换为阿里云镜像"
+# 分多步骤进行,增强缓存,减少重复构建
+# 安装系统依赖
+RUN apt-get update
+RUN apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    sqlite3 \
+    libsqlite3-dev \
+    libicu-dev \
+    icu-devtools \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libwebp-dev \
+    supervisor \
+    protobuf-compiler \
+    zsh \
+    zsh-common \
+    openssh-server \
+    tmux tree \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 PHP 扩展
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
+    docker-php-ext-install \
+    pdo \
+    pdo_sqlite \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    sockets \
+    intl
+
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+
+
+# 复制自定义 PHP 配置
+COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+
+# 启用 Apache 模块
+RUN a2enmod rewrite headers
+
+# 安装 Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# 配置 Apache 虚拟主机
+COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# 配置 SSH 服务
+RUN echo "🔧 配置 SSH 服务..." && \
+    mkdir -p /var/run/sshd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "✅ SSH 服务配置完成"
+
+# 创建 php 用户和用户组
+RUN echo "📝 创建 php 用户..." && \
+    groupadd -r -g 1000 php && \
+    useradd -r -u 1000 -g php -s /bin/bash -d /home/php php && \
+    mkdir -p /home/php && \
+    chown -R php:php /home/php && \
+    echo "✅ php 用户创建完成 (UID:1000, 主目录:/home/php)"
+
+# php 用户增加 apt 权限
+RUN echo "🔧 安装 sudo 并为 php 用户增加 apt 权限..." && \
+    apt-get update && \
+    apt-get install -y sudo && \
+    echo "php ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/apt, /usr/bin/dpkg, /bin/ln" >> /etc/sudoers && \
+    echo "✅ php 用户 apt 权限配置完成"
+
+# php 用户访问必要目录权限
+RUN usermod -a -G www-data php && \
+    usermod -a -G php www-data && \
+    mkdir -p /var/www/html/storage /var/www/html/storage/logs /var/www/html/storage/framework/cache /var/www/html/storage/framework/sessions /var/www/html/storage/framework/testing /var/www/html/storage/framework/views /var/www/html/bootstrap/cache && \
+    chown -R php:php /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chown -R php:www-data /var/log/apache2 && \
+    chmod -R 775 /var/log/apache2
+
+# 安装 Node.js
+RUN echo "🔧 安装 Node.js..." && \
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
+    apt-get install -y nodejs && \
+    echo "✅ Node.js 安装完成" && \
+    node --version && \
+    npm --version
+# 安装
+
+# 安装 Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code intelephense
+
+
+# 复制 supervisor 配置(用于生产模式)
+# COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+
+
+# 暴露端口
+EXPOSE 80 22
+
+# 开发环境启动命令(由 compose.yml 覆盖)
+CMD ["apache2-foreground"]

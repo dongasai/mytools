@@ -1,0 +1,142 @@
+# MCP Tools 开发容器 - 基于 Apache + PHP 8.4
+FROM hbbb.xiaobei.fun/library/php:8.4-apache
+
+# 设置工作目录
+WORKDIR /var/www/html
+
+#配置国内镜像加速器   # 替换 apt 源为阿里云镜像
+RUN echo "🔧 配置国内镜像加速器..." && \
+    sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    echo "✅ APT 源已切换为阿里云镜像"
+# 分多步骤进行，增强缓存，减少重复构建
+# 安装系统依赖 (仅必需的)
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    sqlite3 \
+    libsqlite3-dev \
+    libzip-dev \
+    libicu-dev \
+    icu-devtools \
+    supervisor && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pecl install redis-6.3.0 \
+    && docker-php-ext-enable redis
+
+# 安装 PHP 扩展 (仅必需的)
+RUN docker-php-ext-install \
+    pdo \
+    pdo_sqlite \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    zip \
+    sockets \
+    zip \
+    intl \
+    opcache
+
+# 安装 GD 扩展并启用 JPEG 和 FreeType 支持
+RUN docker-php-ext-configure gd --with-jpeg --with-freetype && \
+    docker-php-ext-install gd
+
+# 复制自定义 PHP 配置
+COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+
+# 启用 Apache 模块
+RUN a2enmod rewrite headers
+
+# 安装 Composer
+COPY --from=hbbb.xiaobei.fun/library/composer:latest /usr/bin/composer /usr/bin/composer
+
+# 配置 Apache 使用 php 用户运行
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html/public\n\
+    <Directory /var/www/html/public>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf && \
+    sed -i 's/\${APACHE_RUN_USER:=www-data}/\${APACHE_RUN_USER:=php}/g' /etc/apache2/envvars && \
+    sed -i 's/\${APACHE_RUN_GROUP:=www-data}/\${APACHE_RUN_GROUP:=php}/g' /etc/apache2/envvars
+
+#创建 php 用户和用户组
+RUN echo "📝 创建 php 用户..." && \
+    groupadd -r -g 1000 php && \
+    useradd -r -u 1000 -g php -s /bin/bash -d /home/php php && \
+    mkdir -p /home/php && \
+    chown -R php:php /home/php && \
+    echo "✅ php 用户创建完成 (UID:1000, 主目录:/home/php)"
+# php用户,增加apt 权限
+RUN echo "🔧 安装 sudo 并为 php 用户增加 apt 权限..." && \
+    apt-get update && \
+    apt-get install -y sudo && \
+    echo "php ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/apt, /usr/bin/dpkg" >> /etc/sudoers && \
+    echo "✅ php 用户 apt 权限配置完成"
+
+
+# php用户 运行php
+# 确保 php 用户有访问必要目录的权限
+RUN usermod -a -G www-data php && \
+    mkdir -p /var/www/html/storage /var/www/html/storage/logs /var/www/html/storage/framework/cache /var/www/html/storage/framework/sessions /var/www/html/storage/framework/testing /var/www/html/storage/framework/views /var/www/html/bootstrap/cache && \
+    chown -R php:php /var/www/html/storage /var/www/html/bootstrap/cache
+
+
+# 增加 node
+RUN echo "🔧 安装 Node.js..." && \
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
+    apt-get install -y nodejs && \
+    echo "✅ Node.js 安装完成" && \
+    node --version && \
+    npm --version
+
+# 先复制 composer 文件，利用 Docker 层缓存
+COPY composer.json composer.lock ./
+
+# 安装 PHP 依赖（只有 composer.json/lock 变化时才会重新执行）
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts
+
+# 复制项目代码
+COPY --chown=php:php . /var/www/html
+
+# 复制 supervisor 配置
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# 创建 supervisor 日志目录
+RUN mkdir -p /var/log/supervisor
+
+# 接收构建参数
+ARG BUILD_TIME
+ARG BUILD_BRANCH
+ARG BUILD_COMMIT
+ARG BUILD_RUNNER
+
+# 设置环境变量（容器运行时可访问）
+ENV DOCKER_BUILD_TIME=${BUILD_TIME} \
+    DOCKER_BUILD_BRANCH=${BUILD_BRANCH} \
+    DOCKER_BUILD_COMMIT=${BUILD_COMMIT} \
+    DOCKER_BUILD_RUNNER=${BUILD_RUNNER}
+
+# 存储构建信息到镜像标签（可用 docker inspect 查看）
+LABEL build.time="${BUILD_TIME}" \
+      build.branch="${BUILD_BRANCH}" \
+      build.commit="${BUILD_COMMIT}" \
+      build.runner="${BUILD_RUNNER}"
+
+# 容器启动脚本
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
