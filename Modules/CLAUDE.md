@@ -1,18 +1,19 @@
 # 模块架构文档
 
-本文档梳理 AI 辅助开发平台"三牛（CodeNnn）"的所有模块，按照架构分层组织。
+本文档梳理"个人工具"项目的所有模块，按照架构分层组织。
 
 ---
 
 ## 项目定位
 
-**三牛（CodeNnn: The Next‑gen Neural Nexus for Software Creation）**
+**个人工具（mytool）**
 
 **核心能力**:
-- AI 代码生成：基于大语言模型的智能代码生成
-- 智能重构：代码分析与优化建议
-- 自动化测试：智能测试用例生成与执行
-- 模块化架构：基于 Laravel 12 的三层架构设计
+- 工具集合：多种实用工具集成
+- AI 辅助：基于大语言模型的智能功能
+- 数据处理：Excel 导入导出、数据转换
+- 文件管理：文件上传、存储、访问
+- 模块化架构：基于 Laravel 12 的模块化设计
 
 ---
 
@@ -23,82 +24,28 @@
 └── ABase = 基础工具模块（ServiceProvider基类、Hook、Event、通用工具）
 
 业务模块层（核心业务逻辑）
-├── NnnnMain = 主模块（核心业务协调）
-├── NnnAgent = AI Agent 模块（AI Agent 管理与执行）
-└── NnnProject = 项目管理模块（项目资源管理）
-
-功能模块层（通用功能支持）
+├── MyToolsMain = 主模块（项目核心功能、后台首页）
 ├── FeatureAi = AI 功能模块（AI 能力集成）
 ├── FeatureExcel = Excel 导入导出引擎（模板类驱动）
-├── FeatureExcelDemo = FeatureExcel 演示模块（集成示例）
-├── FeatureSms = 短信功能模块（验证码、短信网关）
-├── FeatureSsh = SSH 功能模块（SSH 服务器管理与远程操作）
 ├── AFile = 文件管理模块（文件/图片上传、存储、访问）
-├── Notification = 消息通知模块（统一通知系统）
-├── ASync = 数据同步模块（数据库变更同步）
-├── Cms = 内容管理模块（文章、分类管理）
-├── China = 中国区数据模块（中国特殊内容）
 └── Application = 应用通用模块（应用通用定义）
 
 前台模块层（提供 API/Web 入口）
 └── DcatAdmin = 超管后台 Web 界面
-
-模板模块（不参与业务）
-└── Emptyarch = 空架构模板（创建新模块的模板）
 
 调试工具
 └── Debug = 调试模块（日志分析、状态监控）
 
 演示模块
 └── Demo5 = 演示模块（模块化最佳实践演示）
+
+数据支持
+└── China = 中国区数据模块（中国特殊内容）
 ```
 
 ---
 
-## 一、业务模块层
-
-### NnnnMain - 主模块
-
-**模块定位**: 核心业务协调模块
-
-**核心功能**: 核心业务协调、跨模块协调服务
-
----
-
-### NnnAgent - AI Agent 模块
-
-**模块定位**: AI Agent 管理与执行模块
-
-**核心功能**:
-- AI Agent 管理
-- Agent 执行引擎
-- 钩子系统集成
-- 参数与结果管理
-
-**数据表前缀**: `nnnagent_`
-
-**依赖**: NnnProject（在项目上执行任务）
-
----
-
-### NnnProject - 项目管理模块
-
-**模块定位**: 项目资源管理模块
-
-**核心功能**:
-- 项目生命周期管理（创建、编辑、删除）
-- 本地项目管理
-- SSH远程项目管理
-- 项目类型识别
-- 项目配置管理
-
-**数据表前缀**: `nnnproject_`
-
-**依赖**: FeatureSsh（SSH项目需要SSH连接）
-
----
-
-## 二、核心模块层
+## 一、核心模块层
 
 ### ABase - 基础工具模块
 
@@ -113,13 +60,29 @@
 
 ---
 
-## 三、功能模块层
+## 二、业务模块层
+
+### MyToolsMain - 主模块
+
+**模块定位**: 项目主模块，承载项目核心功能
+
+**核心功能**:
+- 后台首页
+- 项目级功能
+- 系统仪表盘
+- 全局配置
+
+**数据表前缀**: 无独立数据表
+
+---
 
 ### FeatureAi - AI 功能模块
 
 **模块定位**: AI 能力集成模块
 
 **核心功能**: AI 相关功能集成、LLM API 调用、AI 能力封装
+
+**数据表前缀**: `featureai_`
 
 ---
 
@@ -141,59 +104,6 @@
 
 ---
 
-### FeatureExcelDemo - FeatureExcel 演示模块
-
-**模块定位**: 演示模块，完整展示 FeatureExcel 模块集成方式
-
-**核心功能**: 订单导入导出完整示例、Service 层业务逻辑
-
-**演示特性**:
-- ✅ 流式字段映射构建
-- ✅ 业务验证钩子（validateRow）
-- ✅ 数据转换钩子（transformRow）
-- ✅ 数据格式化钩子（formatRow）
-- ✅ Service 层业务逻辑
-
-**数据表前缀**: `demo_orders`
-
-**集成参考**: 其他业务模块集成 FeatureExcel 时，参考 FeatureExcelDemo 的完整实现
-
----
-
-### FeatureSms - 短信功能模块
-
-**模块定位**: 短信验证码发送、验证等功能模块
-
-**核心功能**:
-- 短信验证码发送
-- 短信验证码验证
-- 多种验证码类型支持（登录、注册、密码重置）
-- 短信网关配置管理
-- 验证码有效期控制
-- 防重复发送机制
-- Admin 后台管理界面
-
-**数据表前缀**: `fsms_`
-
----
-
-### FeatureSsh - SSH 功能模块
-
-**模块定位**: SSH 服务器管理与远程操作功能模块
-
-**核心功能**:
-- SSH 服务器管理（服务器信息、分组、状态监控）
-- SSH 认证管理（密钥对、密码、证书、Agent）
-- SSH 连接管理（连接池、会话管理、断线重连）
-- SSH Bash 执行（命令执行、实时输出、后台任务）
-- SFTP 文件传输（上传下载、目录操作、权限管理）
-
-**数据表前缀**: `fssh_`
-
-**被依赖模块**: NnnAgent（远程项目）、ASync（远程同步）
-
----
-
 ### AFile - 文件管理模块
 
 **模块定位**: 文件和图片上传、存储、访问的基础模块，供其他模块使用
@@ -209,44 +119,13 @@
 
 ---
 
-### Notification - 消息通知模块
+### Application - 应用通用模块
 
-**模块定位**: 统一消息通知系统，整合短信、邮件、推送等多个通知渠道
+**模块定位**: 包含应用通用定义，但不包含核心，依赖核心
 
-**核心功能**: 统一通知接口、多渠道通知整合、通知发送管理
+**核心功能**: 应用通用定义
 
-**数据表前缀**: `notification_`
-
----
-
-### ASync - 数据同步模块
-
-**模块定位**: 数据库变更同步模块，用于向正式服/预发布服务器同步数据库变更
-
-**核心功能**:
-- 数据库连接管理
-- 同步计划管理
-- 表同步配置
-- 预览 SQL 机制
-- 任务执行与监控
-- 回滚恢复
-
-**数据表前缀**: `sync_`
-
----
-
-### Cms - 内容管理模块
-
-**模块定位**: 内容管理系统，采用单模块全栈架构
-
-**核心功能**:
-- 文章管理（创建、编辑、删除）
-- 分类管理（层级分类系统）
-- 内容发布（富文本编辑）
-- 事件系统（文章创建、更新、查看事件）
-- 完整的 CRUD 操作
-
-**数据表前缀**: `cms_`
+**数据表前缀**: `application_`
 
 ---
 
@@ -258,35 +137,7 @@
 
 ---
 
-### Application - 应用通用模块
-
-**模块定位**: 包含应用通用定义，但不包含核心，依赖核心
-
-**核心功能**: 应用通用定义
-
-**数据表前缀**: `application_`
-
----
-
-### Demo5 - 演示模块
-
-**模块定位**: 演示模块化最佳实践的完整功能模块
-
-**核心功能**:
-- 服务层架构（Services + Logics）
-- 事件驱动系统（Events + Listeners）
-- 钩子系统（Hooks）
-- 队列任务处理（QueueJobs）
-- 数据传输对象（DTOs）
-- 枚举类型管理（Enums）
-- 自定义模型类型转换（Casts）
-- Artisan 命令工具
-
-**数据表前缀**: `demo5_`
-
----
-
-## 四、前台模块层
+## 三、前台模块层
 
 ### DcatAdmin - 超管后台模块
 
@@ -307,23 +158,7 @@
 
 ---
 
-## 五、模板模块
-
-### Emptyarch - 空架构模板模块
-
-**模块定位**: 作为创建新模块的模板，包含完整的目录结构和基础文件
-
-**用途**: 
-- 使用 `php artisan module:make-arch {ModuleName}` 创建新模块时作为模板
-- 包含完整目录结构、命名空间替换、module.json 配置
-
-**状态**: 未启用（modules_statuses.json 中 false）
-
-⚠️ **重要提示**: 此模块为架构模板，不应用于实际业务开发
-
----
-
-## 六、调试工具
+## 四、调试工具
 
 ### Debug - 调试模块
 
@@ -341,7 +176,7 @@
 
 ---
 
-## 七、演示模块
+## 五、演示模块
 
 ### Demo5 - 演示模块
 
@@ -361,13 +196,12 @@
 
 ---
 
-## 八、模块架构特点总结
+## 六、模块架构特点总结
 
 ### 单模块全栈架构
 
 大部分业务/功能模块采用"单模块全栈架构"，包含：
 
-- **ApiProto/**: SaaS 管理端 API 入口（部分模块）
 - **DcatAdmin/**: 超管后台 Web 入口
 - **Models/**: 数据模型层
 - **Services/**: 业务服务层
@@ -376,13 +210,6 @@
 - **Validations/**: 验证类
 - **Events/**: 事件类
 - **Listeners/**: 监听器
-- **protos/**: 定义文件
-
-### 双管理入口分离
-
-- **超管后台**（DcatAdmin Controllers）: `/admin`，系统级管理
-- **SaaS管理端**（ApiProto Handlers）: `/api/proto`，租户级管理（部分模块支持）
-- **共享业务逻辑**: 两个入口共享同一 Models/Services/Logics 层
 
 ### 模块间通信
 
@@ -392,20 +219,17 @@
 
 ---
 
-## 九、模块启用状态
+## 七、模块启用状态
 
-**总模块数**: 20 个
+**总模块数**: 8 个
 
-**已启用**: 19 个
-- NnnnMain, ABase, AFile, Application, ASync, China, Cms, DcatAdmin, Debug, Demo5
-- FeatureAi, FeatureExcel, FeatureExcelDemo, FeatureSms, FeatureSsh, Notification, NnnAgent, NnnProject
-
-**未启用**: 1 个
-- Emptyarch（模板模块，不参与业务）
+**已启用**: 8 个
+- MyToolsMain, ABase, AFile, Application, China, DcatAdmin, Debug, Demo5
+- FeatureAi, FeatureExcel
 
 ---
 
-## 十、开发规范
+## 八、开发规范
 
 ### 必须遵守
 
@@ -419,7 +243,7 @@
 ### 分层架构（单模块内部）
 
 ```
-Models → Services → Logics → Controllers(模块内的DcatAdmin/Api入口)
+Models → Services → Logics → Controllers(模块内的DcatAdmin入口)
 ```
 
 | 层级 | 职责 | 关键规则 |
@@ -428,51 +252,34 @@ Models → Services → Logics → Controllers(模块内的DcatAdmin/Api入口)
 | **Services** | 协调组件、复杂业务 | **优先静态方法**，**禁止读取HTTP/session** |
 | **Logics** | 数据组装/单一逻辑 | **必须静态类**，不允许实例化，无状态 |
 | **DcatAdmin Controllers** | 超管后台HTTP处理 | Grid/Form/Action，系统级管理 |
-| **ApiProto Handlers** | SaaS管理端API Handler | **禁止直接操作数据库**，需通过 Services 层 |
 
 ---
 
-## 十一、模块依赖关系图
+## 九、模块依赖关系图
 
 ```
 核心层：ABase（所有模块依赖）
     ↓
-业务层：NnnnMain（主模块协调）
-        NnnAgent（AI Agent）
-    ↓
-功能层：Feature* 系列（功能模块）
-        AFile/Notification/ASync/Cms（业务支持）
+业务层：MyToolsMain（主模块）
+        FeatureAi, FeatureExcel, AFile（功能模块）
     ↓
 前台层：DcatAdmin（超管后台）
 ```
 
 ---
 
-## 十二、快速导航
+## 十、快速导航
 
 ### 核心模块
 - [ABase](./ABase/) - 基础工具模块
 
 ### 业务模块
-- [NnnnMain](./NnnnMain/) - 主模块
-- [NnnAgent](./NnnAgent/) - AI Agent 模块
-- [NnnProject](./NnnProject/) - 项目管理模块
-
-### 功能模块
-- [FeatureAi](./FeatureAi/) - AI 功能
+- [MyToolsMain](./MyToolsMain/) - 主模块
 - [FeatureAi](./FeatureAi/) - AI 功能
 - [FeatureExcel](./FeatureExcel/) - Excel 导入导出引擎
-- [FeatureExcelDemo](./FeatureExcelDemo/) - FeatureExcel 演示
-- [FeatureSms](./FeatureSms/) - 短信功能
-- [FeatureSsh](./FeatureSsh/) - SSH 功能
-
-### 业务支持模块
 - [AFile](./AFile/) - 文件管理
-- [Notification](./Notification/) - 消息通知
-- [ASync](./ASync/) - 数据同步
-- [Cms](./Cms/) - 内容管理
-- [China](./China/) - 中国区数据
 - [Application](./Application/) - 应用通用
+- [China](./China/) - 中国区数据
 
 ### 前台模块
 - [DcatAdmin](./DcatAdmin/) - 超管后台
@@ -481,10 +288,7 @@ Models → Services → Logics → Controllers(模块内的DcatAdmin/Api入口)
 - [Demo5](./Demo5/) - 演示模块
 - [Debug](./Debug/) - 调试模块
 
-### 模板模块
-- [Emptyarch](./Emptyarch/) - 空架构模板（创建新模块用）
-
 ---
 
-**更新时间**: 2026-09-02
-**维护者**: AI 开发团队
+**更新时间**: 2026-09-04
+**维护者**: 开发团队
