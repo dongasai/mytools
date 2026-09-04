@@ -1,0 +1,71 @@
+version: '1.0'
+modules:
+  DcatAdmin:
+    name: DcatAdmin
+    path: Modules/DcatAdmin/
+    remote: ssh://git@192.168.4.101:32128/laravel_module/DcatAdmin.git
+    branch: master
+  Debug:
+    name: Debug
+    path: Modules/Debug
+    remote: ssh://git@192.168.4.101:32128/laravel_module/debug.git
+    branch: main
+  Demo5:
+    name: Demo5
+    path: Modules/Demo5
+    remote: ssh://git@192.168.4.101:32128/laravel_module/demo5.git
+    branch: master
+  ABase:
+    name: ABase
+    path: Modules/ABase/
+    remote: ssh://git@192.168.4.101:32128/laravel_module/ABase.git
+    branch: master
+  ABackup:
+    name: ABackup
+    path: Modules/ABackup/
+    remote: ssh://git@192.168.4.101:32128/laravel_module/ABackup.git
+    branch: main
+  AClean:
+    name: AClean
+    path: Modules/AClean/
+    remote: ssh://git@192.168.4.101:32128/laravel_module/AClean.git
+    branch: main
+  AFile:
+    name: AFile
+    path: Modules/AFile/
+    remote: ssh://git@192.168.4.101:32128/laravel_module/AFile.git
+    branch: master
+  Application:
+    name: Application
+    path: Modules/Application/
+    remote: ssh://git@192.168.4.101:32128/laravel_module/Application.git
+    branch: master
+  China:
+    name: China
+    path: Modules/China/
+    remote: ssh://git@192.168.4.101:32128/laravel_module/China.git
+    branch: master
+  Cms:
+    name: Cms
+    path: Modules/Cms
+    remote: ssh://git@192.168.4.101:32128/laravel_module/Cms.git
+    branch: master
+  Notification:
+    name: Notification
+    path: Modules/Notification/
+    remote: ssh://git@192.168.4.101:32128/laravel_module/Notification.git
+    branch: master
+  FeatureAi:
+    name: FeatureAi
+    path: Modules/FeatureAi
+    remote: ssh://git@192.168.4.101:32128/laravel_module/FeatureAi.git
+    branch: main
+  Emptyarch:
+    name: Emptyarch
+    path: Modules/Emptyarch
+    remote: ssh://git@192.168.4.101:32128/laravel_module/Emptyarch.git
+    branch: main
+settings:
+  default_branch: main
+  show_all_modules_in_status: true
+  auto_ignore_git: true

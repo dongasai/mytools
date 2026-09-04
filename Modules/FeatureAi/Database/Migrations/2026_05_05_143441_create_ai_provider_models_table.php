@@ -36,11 +36,11 @@ return new class extends Migration
             $table->softDeletes()->comment('软删除时间');
 
             // 索引
-            $table->index('provider_id', 'idx_provider_id');
+            $table->index('provider_id', 'idx_model_provider_id');
             $table->index('model_name', 'idx_model_name');
             $table->index('model_type', 'idx_model_type');
-            $table->index('is_active', 'idx_is_active');
-            $table->index('deleted_at', 'idx_deleted_at');
+            $table->index('is_active', 'idx_model_is_active');
+            $table->index('deleted_at', 'idx_model_deleted_at');
 
             $table->comment('AI模型配置表');
         });

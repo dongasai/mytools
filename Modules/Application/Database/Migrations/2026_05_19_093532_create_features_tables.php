@@ -65,7 +65,7 @@ return new class extends Migration
             $table->string('reason', 255)->nullable()->comment('加入黑名单原因');
             $table->timestamps();
 
-            $table->unique(['feature_id', 'user_id'], 'uk_feature_user');
+            $table->unique(['feature_id', 'user_id'], 'uk_blacklist_feature_user');
             $table->index('feature_id');
             $table->index('user_id');
         });

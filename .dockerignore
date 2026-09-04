@@ -1,0 +1,101 @@
+# Git 相关
+.git
+.gitignore
+.gitattributes
+
+# 开发工具配置
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# 依赖目录（构建时通过 composer install 生成）
+node_modules
+node_modules/**
+vendor
+vendor/**
+
+# AI 工作目录（重要：临时文档和追踪）
+AiWork
+AiWork/**
+
+# 构建输出
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# 运行时文件
+*.pid
+*.seed
+*.pid.lock
+
+# 覆盖率目录
+coverage/
+.nyc_output
+
+# 依赖锁定文件
+package-lock.json
+yarn.lock
+
+# 测试相关
+.phpunit.result.cache
+.phpunit.cache.php
+tests/
+Tests/
+
+# Laravel 特定
+.env
+.env.*
+!.env.example
+# 日志目录（完整排除，减少数百MB）
+storage/logs
+storage/logs/**
+# 其他 storage 目录
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+bootstrap/cache/*
+
+# 上传文件和用户文件
+public/storage
+public/uploads
+
+# 缓存
+.cache
+
+# IDE 相关
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+
+# 文档（非必需）
+README.md
+CHANGELOG.md
+LICENSE.md
+docs/
+*.md
+
+# Docker 相关
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# 开发环境特定
+.devcontainer
+
+# 编译输出
+build/
+dist/
+
+# Rust 编译输出（最大目录，3.8GB）
+rust-consumer
+rust-consumer/**
+rust-consumer/target
+rust-consumer/target/**

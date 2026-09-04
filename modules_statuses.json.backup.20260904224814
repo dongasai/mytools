@@ -1,0 +1,22 @@
+{
+    "NnnnMain": true,
+    "ABase": true,
+    "AFile": true,
+    "Application": true,
+    "ASync": false,
+    "China": true,
+    "Cms": false,
+    "DcatAdmin": true,
+    "Debug": true,
+    "Demo5": true,
+    "FeatureAi": true,
+    "FeatureExcel": true,
+    "FeatureExcelDemo": true,
+    "FeatureSms": true,
+    "Notification": true,
+    "NnnAgent": true,
+    "Emptyarch": false,
+    "FeatureSsh": true,
+    "NnnProject": true,
+    "Aidemo": true
+}

@@ -26,12 +26,15 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('dict_type', 'idx_dict_type');
-            $table->index('status', 'idx_status');
+            $table->index('status', 'idx_dict_status');
             $table->unique(['dict_type', 'dict_value'], 'uk_type_value');
+            $table->comment('通用字典表');
         });
 
-        // 添加表注释(MySQL)
-        DB::statement("ALTER TABLE `application_dict` COMMENT '通用字典表'");
+        // 添加表注释(MySQL) - 仅在 MySQL 环境下执行
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE `application_dict` COMMENT '通用字典表'");
+        }
     }
 
     /**

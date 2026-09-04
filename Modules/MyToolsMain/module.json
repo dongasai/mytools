@@ -1,0 +1,17 @@
+{
+    "name": "MyToolsMain",
+    "alias": "mytoolsmain",
+    "description": "个人工具主模块 - 项目核心模块",
+    "keywords": [],
+    "priority": 10,
+    "providers": [
+        "Modules\\MyToolsMain\\Providers\\MyToolsMainServiceProvider",
+        "Modules\\MyToolsMain\\Providers\\RouteServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": [],
+    "migration": {
+        "seeds": []
+    }
+}

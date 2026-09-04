@@ -1,0 +1,98 @@
+/.phpunit.cache
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+
+# vendor 目录不纳入版本控制
+vendor/
+# Dcat Admin 前端资源需要纳入版本控制
+!public/vendor/
+
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/auth.json
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+*.dev.yml
+
+# 模块化 - Proto 生成的代码 (自动生成，不应提交)
+Modules/*/app/Proto/
+Modules/*/app/GPBMetadata/
+# modules_statuses.json
+
+# Proto 统一 staging 目录
+protos/modules/
+
+
+# 忽略niushop模块
+ModulesShop/niushop/
+
+
+
+# extensions/dlaravel/ - 已移除独立 git，纳入主项目管理
+storage/framework/views/*
+storage/framework/cache/*
+public/phpinfo.php
+
+
+*.s.md
+.playwright-mcp/*
+storage/framework/sessions/*
+
+#docker
+compose.yml
+
+# Ai
+.mcp.json
+CLAUDE.local.md
+.kilocode/mcp.json
+# AI工具本地配置（递归忽略所有子目录）
+**/.claude/settings.local.json
+
+
+
+AGENT.md
+.kilocode/rules/memory-bank/context.md
+.swarm/
+.claude-flow/
+QWEN.md
+.qwen/
+.openhands/mcp.json
+.browser_screenshots/*
+/docs/greenbid/
+greenbid/
+mimi.md
+
+public/api-docs/api-docs.json
+
+docker-compose.yml
+
+# Proto 生成的代码（自动生成，不应提交）
+Modules/*/app/Proto/
+Modules/*/app/GPBMetadata/
+Modules/*/app/.proto_temp/
+# ApiProto 模块 Proto 生成代码直接提交到 git，部署环境无需 protoc 编译
+
+# git-mrepo 子模块 .git 目录（主仓库忽略子仓库的 Git 管理）
+Modules/*/.git/
+Modules/*/.git.bak/
+
+
+/.user.ini
+/public/.user.ini
+/composer.phar
+/public/guanli/
+public/upload

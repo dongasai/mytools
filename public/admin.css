@@ -1,0 +1,117 @@
+/* // Action按钮 */
+.grid__actions__ a,
+.grid__actions__ span[data-toggle="modal"]{
+    margin: 5px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    padding: 4px 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.grid__actions__ a:hover,
+.grid__actions__ span[data-toggle="modal"]:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    text-decoration: none;
+}
+
+.grid__actions__ a:active,
+.grid__actions__ span[data-toggle="modal"]:active{
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Action按钮样式类 - 6种基础颜色 */
+
+/* 1. 主要色 - 蓝色系 */
+.action-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    border: 1px solid #0056b3 !important;
+    color: #fff !important;
+}
+
+.action-primary:hover {
+    background: linear-gradient(135deg, #0056b3, #004085) !important;
+    border-color: #004085 !important;
+}
+
+/* 2. 成功色 - 绿色系 */
+.action-success {
+    background: linear-gradient(135deg, #28a745, #218838) !important;
+    border: 1px solid #1e7e34 !important;
+    color: #fff !important;
+}
+
+.action-success:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34) !important;
+    border-color: #1e7e34 !important;
+}
+
+/* 3. 危险色 - 红色系 */
+.action-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    border: 1px solid #bd2130 !important;
+    color: #fff !important;
+}
+
+.action-danger:hover {
+    background: linear-gradient(135deg, #c82333, #a71e2a) !important;
+    border-color: #a71e2a !important;
+}
+
+/* 4. 警告色 - 黄色系 */
+.action-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800) !important;
+    border: 1px solid #d39e00 !important;
+    color: #212529 !important;
+}
+
+.action-warning:hover {
+    background: linear-gradient(135deg, #e0a800, #d39e00) !important;
+    border-color: #d39e00 !important;
+}
+
+/* 5. 信息色 - 青色系 */
+.action-info {
+    background: linear-gradient(135deg, #17a2b8, #138496) !important;
+    border: 1px solid #117a8b !important;
+    color: #fff !important;
+}
+
+.action-info:hover {
+    background: linear-gradient(135deg, #138496, #117a8b) !important;
+    border-color: #117a8b !important;
+}
+
+/* 6. 次要色 - 灰色系 */
+.action-secondary {
+    background: linear-gradient(135deg, #6c757d, #5a6268) !important;
+    border: 1px solid #545b62 !important;
+    color: #fff !important;
+}
+
+.action-secondary:hover {
+    background: linear-gradient(135deg, #5a6268, #545b62) !important;
+    border-color: #545b62 !important;
+}
+
+/* 图标按钮特殊样式 */
+.action-icon {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    border: 1px solid #0056b3 !important;
+    color: #fff !important;
+    padding: 6px 10px !important;
+}
+
+.action-icon:hover {
+    background: linear-gradient(135deg, #0056b3, #004085) !important;
+    border-color: #004085 !important;
+}
+.btn {
+    margin-left: 8px;
+}
