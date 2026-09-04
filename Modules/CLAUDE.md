@@ -25,7 +25,6 @@
 
 业务模块层（核心业务逻辑）
 ├── MyToolsMain = 主模块（项目核心功能、后台首页）
-├── FeatureAi = AI 功能模块（AI 能力集成）
 ├── FeatureExcel = Excel 导入导出引擎（模板类驱动）
 ├── AFile = 文件管理模块（文件/图片上传、存储、访问）
 └── Application = 应用通用模块（应用通用定义）
@@ -41,6 +40,12 @@
 
 数据支持
 └── China = 中国区数据模块（中国特殊内容）
+
+未启用模块
+└── FeatureAi = AI 功能模块（迁移问题，暂时禁用）
+
+模板模块（未启用）
+└── Emptyarch = 空架构模板（用于创建新模块）
 ```
 
 ---
@@ -76,13 +81,15 @@
 
 ---
 
-### FeatureAi - AI 功能模块
+### FeatureAi - AI 功能模块（未启用）
 
 **模块定位**: AI 能力集成模块
 
 **核心功能**: AI 相关功能集成、LLM API 调用、AI 能力封装
 
 **数据表前缀**: `featureai_`
+
+**当前状态**: 因迁移问题暂时禁用
 
 ---
 
@@ -196,7 +203,23 @@
 
 ---
 
-## 六、模块架构特点总结
+## 六、模板模块
+
+### Emptyarch - 空架构模板模块
+
+**模块定位**: 作为创建新模块的模板，包含完整的目录结构和基础文件
+
+**用途**:
+- 使用 `php artisan module:make-arch {ModuleName}` 创建新模块时作为模板
+- 包含完整目录结构、命名空间替换、module.json 配置
+
+**状态**: 未启用（目录存在，但未在 modules_statuses.json 中注册）
+
+⚠️ **重要提示**: 此模块为架构模板，不参与业务逻辑
+
+---
+
+## 七、模块架构特点总结
 
 ### 单模块全栈架构
 
@@ -219,17 +242,30 @@
 
 ---
 
-## 七、模块启用状态
+## 八、模块启用状态
 
-**总模块数**: 8 个
+**总模块数**: 10 个
 
-**已启用**: 8 个
-- MyToolsMain, ABase, AFile, Application, China, DcatAdmin, Debug, Demo5
-- FeatureAi, FeatureExcel
+**已启用**: 9 个
+- MyToolsMain - 主模块
+- ABase - 基础工具
+- AFile - 文件管理
+- Application - 应用通用
+- China - 中国区数据
+- DcatAdmin - 超管后台
+- Debug - 调试工具
+- Demo5 - 演示模块
+- FeatureExcel - Excel引擎
+
+**未启用**: 1 个
+- FeatureAi - AI功能模块（迁移问题，暂时禁用）
+
+**模板模块**: 1 个
+- Emptyarch - 空架构模板（目录存在，用于创建新模块）
 
 ---
 
-## 八、开发规范
+## 九、开发规范
 
 ### 必须遵守
 
@@ -255,27 +291,30 @@ Models → Services → Logics → Controllers(模块内的DcatAdmin入口)
 
 ---
 
-## 九、模块依赖关系图
+## 十、模块依赖关系图
 
 ```
 核心层：ABase（所有模块依赖）
     ↓
 业务层：MyToolsMain（主模块）
-        FeatureAi, FeatureExcel, AFile（功能模块）
+        FeatureExcel, AFile（功能模块）
     ↓
 前台层：DcatAdmin（超管后台）
+
+未启用：FeatureAi（AI功能模块）
+模板：Emptyarch（创建新模块用）
 ```
 
 ---
 
-## 十、快速导航
+## 十一、快速导航
 
 ### 核心模块
 - [ABase](./ABase/) - 基础工具模块
 
 ### 业务模块
 - [MyToolsMain](./MyToolsMain/) - 主模块
-- [FeatureAi](./FeatureAi/) - AI 功能
+- [FeatureAi](./FeatureAi/) - AI 功能（未启用）
 - [FeatureExcel](./FeatureExcel/) - Excel 导入导出引擎
 - [AFile](./AFile/) - 文件管理
 - [Application](./Application/) - 应用通用
@@ -287,6 +326,9 @@ Models → Services → Logics → Controllers(模块内的DcatAdmin入口)
 ### 演示与调试
 - [Demo5](./Demo5/) - 演示模块
 - [Debug](./Debug/) - 调试模块
+
+### 模板模块
+- [Emptyarch](./Emptyarch/) - 空架构模板（创建新模块用）
 
 ---
 
