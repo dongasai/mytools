@@ -42,6 +42,7 @@
 //  100*** FeatureSms 短信模块
 //  101*** NovelPromotion 小说推广模块
 //  102*** FeatureAi AI功能模块
+//  103*** FeatureDbadmin 数据库管理员模块
 
 
 ## 预留 六位ID段（200***-499***）
