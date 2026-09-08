@@ -2,6 +2,8 @@
 
 namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
 
+use Dcat\Admin\Layout\Content;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\FeatureDbadmin\Models\QueryHistory;
 use Modules\FeatureDbadmin\Services\DatabaseService;
@@ -16,19 +18,27 @@ class DashboardController extends Controller
     /**
      * 仪表盘首页
      *
-     * 返回 Vue 页面（无后台布局嵌套）
-     *
-     * @return \Illuminate\View\View
+     * @param Request $request
+     * @param Content $content
+     * @return \Illuminate\View\View|Content
      */
-    public function index()
+    public function index(Request $request, Content $content)
     {
-        return view('featuredbadmin::vue.dashboard');
+        // standalone 或 pjax：直接返回 Vue 视图（vue-app 布局处理）
+        if ($request->get('standalone') || $request->pjax()) {
+            return view('featuredbadmin::vue.dashboard');
+        }
+
+        // 普通请求：用 Content 包装后台布局，body 返回 Vue 视图
+        // Vue 视图会渲染 iframe 容器
+        return $content
+            ->title('数据库管理员工具')
+            ->description('系统概览')
+            ->body(view('featuredbadmin::vue.dashboard'));
     }
 
     /**
      * 统计数据 JSON 接口
-     *
-     * 返回连接数量、查询次数、活跃连接等统计数据
      *
      * @return \Illuminate\Http\JsonResponse
      */
@@ -42,6 +52,36 @@ class DashboardController extends Controller
             'active_connections' => count($activeConnections),
             'queries' => QueryHistory::count(),
             'today_queries' => QueryHistory::whereDate('created_at', today())->count(),
+        ]);
+    }
+
+    /**
+     * 查询历史 JSON 接口
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function queryHistory(Request $request)
+    {
+        $limit = $request->get('limit', 10);
+
+        $histories = QueryHistory::orderBy('executed_at', 'desc')
+            ->limit($limit)
+            ->get()
+            ->map(function ($history) {
+                return [
+                    'id' => $history->id,
+                    'connection_name' => $history->connection_name,
+                    'sql_query' => $history->sql_query,
+                    'query_type' => $history->query_type,
+                    'execution_time' => $history->execution_time,
+                    'status' => $history->status,
+                    'executed_at' => $history->executed_at->format('Y-m-d H:i:s'),
+                ];
+            });
+
+        return response()->json([
+            'data' => $histories,
         ]);
     }
 }

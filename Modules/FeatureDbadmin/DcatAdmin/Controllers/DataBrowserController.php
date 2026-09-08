@@ -2,9 +2,9 @@
 
 namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
 
-use Dcat\Admin\Http\Controllers\AdminController;
 use Dcat\Admin\Layout\Content;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Modules\FeatureDbadmin\Models\Connection;
 use Modules\FeatureDbadmin\Services\DataBrowserService;
 use Modules\FeatureDbadmin\Services\ExportService;
@@ -15,7 +15,7 @@ use Modules\FeatureDbadmin\Services\ExportService;
  * 提供表数据浏览、编辑、导出功能
  * HTML页面和JSON API混合控制器
  */
-class DataBrowserController extends AdminController
+class DataBrowserController extends Controller
 {
     /**
      * 数据浏览页
@@ -26,19 +26,6 @@ class DataBrowserController extends AdminController
      * @param string $tableName
      * @return Content
      */
-    public function index(Content $content, string $tableName): Content
-    {
-        $connections = Connection::getActiveConnections();
-
-        return $content
-            ->title('数据浏览')
-            ->description("表: {$tableName}")
-            ->body('<div id="data-browser-app"></div>')
-            ->view('featuredbadmin::data-browser.index', [
-                'tableName' => $tableName,
-                'connections' => $connections,
-            ]);
-    }
 
     /**
      * 获取数据列表

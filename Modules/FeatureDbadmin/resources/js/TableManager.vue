@@ -223,7 +223,7 @@ const structureDialog = reactive({
  */
 const loadConnections = async () => {
   try {
-    const response = await axios.get('/admin/featuredbadmin/api/connections')
+    const response = await axios.get('/admin/featuredbadmin/connections')
     if (response.data.success) {
       connections.value = response.data.data || []
     }
@@ -261,7 +261,7 @@ const loadTables = async () => {
 
   loading.value = true
   try {
-    const response = await axios.get('/admin/featuredbadmin/api/tables', {
+    const response = await axios.get('/admin/featuredbadmin/tables', {
       params: { connection_id: selectedConnection.value }
     })
     if (response.data.success) {
@@ -292,7 +292,7 @@ const selectTable = async (table) => {
   structureDialog.tableName = table.name
 
   try {
-    const response = await axios.get('/admin/featuredbadmin/api/table-structure', {
+    const response = await axios.get('/admin/featuredbadmin/tables/', {
       params: {
         connection_id: selectedConnection.value,
         table_name: table.name
@@ -371,7 +371,7 @@ const exportAllTables = async () => {
   }
 
   try {
-    const response = await axios.post('/admin/featuredbadmin/api/export-all-tables', {
+    const response = await axios.post('/admin/featuredbadmin/tables/export-all', {
       connection_id: selectedConnection.value,
       format: 'sql'
     })

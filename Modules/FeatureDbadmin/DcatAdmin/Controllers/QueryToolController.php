@@ -2,9 +2,9 @@
 
 namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
 
-use Dcat\Admin\Http\Controllers\AdminController;
 use Dcat\Admin\Layout\Content;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Modules\FeatureDbadmin\Models\Connection;
 use Modules\FeatureDbadmin\Models\QueryHistory;
 use Modules\FeatureDbadmin\Models\SavedQuery;
@@ -16,7 +16,7 @@ use Modules\FeatureDbadmin\Services\QueryService;
  * 提供SQL执行、历史记录、保存查询功能
  * HTML页面和JSON API混合控制器
  */
-class QueryToolController extends AdminController
+class QueryToolController extends Controller
 {
     /**
      * SQL查询工具页
@@ -26,18 +26,6 @@ class QueryToolController extends AdminController
      * @param Content $content
      * @return Content
      */
-    public function index(Content $content): Content
-    {
-        $connections = Connection::getActiveConnections();
-
-        return $content
-            ->title('SQL查询工具')
-            ->description('执行SQL查询、查看历史')
-            ->body('<div id="query-tool-app"></div>')
-            ->view('featuredbadmin::query-tool.index', [
-                'connections' => $connections,
-            ]);
-    }
 
     /**
      * 执行SQL查询

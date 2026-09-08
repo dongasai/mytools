@@ -378,7 +378,7 @@ const insertText = (text) => {
  */
 const loadConnections = async () => {
   try {
-    const response = await axios.get('/admin/featuredbadmin/api/connections')
+    const response = await axios.get('/admin/featuredbadmin/connections')
     if (response.data.success) {
       connections.value = response.data.data || []
     }
@@ -479,7 +479,7 @@ const executeQuery = async () => {
   const startTime = Date.now()
 
   try {
-    const response = await axios.post('/admin/featuredbadmin/api/execute-query', {
+    const response = await axios.post('/admin/featuredbadmin/query/execute', {
       connection_id: selectedConnection.value,
       sql: sql
     })

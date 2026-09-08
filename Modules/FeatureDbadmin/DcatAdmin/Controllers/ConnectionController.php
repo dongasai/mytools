@@ -2,7 +2,6 @@
 
 namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
 
-use Dcat\Admin\Layout\Content;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -12,28 +11,10 @@ use Modules\FeatureDbadmin\Services\DatabaseService;
 /**
  * 数据库连接管理控制器
  *
- * 数据库连接 CRUD 管理
+ * 数据库连接 CRUD 管理（JSON API）
  */
 class ConnectionController extends Controller
 {
-    /**
-     * 连接列表页面
-     *
-     * @param Content $content
-     * @return Content
-     */
-    public function index(Content $content): Content
-    {
-        $connections = DatabaseService::getConnections(false);
-
-        return $content
-            ->title('连接管理')
-            ->description('数据库连接配置管理')
-            ->body(view('featuredbadmin::connection.index', [
-                'connections' => $connections,
-            ]));
-    }
-
     /**
      * 连接列表 JSON 接口
      *

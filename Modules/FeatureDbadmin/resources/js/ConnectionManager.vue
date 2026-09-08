@@ -406,7 +406,7 @@ const handleNodeClick = (data) => {
 const fetchConnections = async () => {
   loading.value = true
   try {
-    const res = await axios.get('/admin/featuredbadmin/connections/list')
+    const res = await axios.get('/admin/featuredbadmin/connections')
     connections.value = (res.data.data || []).map(conn => ({
       ...conn,
       testing: false,

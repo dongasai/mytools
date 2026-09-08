@@ -283,7 +283,7 @@ const editableColumns = computed(() => {
  */
 const loadConnections = async () => {
   try {
-    const response = await axios.get('/admin/featuredbadmin/api/connections')
+    const response = await axios.get('/admin/featuredbadmin/connections')
     if (response.data.success) {
       connections.value = response.data.data || []
     }
@@ -311,7 +311,7 @@ const handleConnectionChange = async () => {
   if (!selectedConnection.value) return
 
   try {
-    const response = await axios.get('/admin/featuredbadmin/api/tables', {
+    const response = await axios.get('/admin/featuredbadmin/tables', {
       params: { connection_id: selectedConnection.value }
     })
     if (response.data.success) {
@@ -342,7 +342,7 @@ const loadTableColumns = async () => {
   if (!selectedTable.value) return
 
   try {
-    const response = await axios.get('/admin/featuredbadmin/api/table-columns', {
+    const response = await axios.get('/admin/featuredbadmin/tables', {
       params: {
         connection_id: selectedConnection.value,
         table_name: selectedTable.value
@@ -383,7 +383,7 @@ const loadData = async () => {
       filter: filterText.value
     }
 
-    const response = await axios.get('/admin/featuredbadmin/api/table-data', { params })
+    const response = await axios.get('/admin/featuredbadmin/data', { params })
     if (response.data.success) {
       const data = response.data.data
       tableData.value = data.rows || []
@@ -479,7 +479,7 @@ const saveCellEdit = async () => {
     row[editingCell.col] = editingCell.value
 
     try {
-      await axios.post('/admin/featuredbadmin/api/update-row', {
+      await axios.post('/admin/featuredbadmin/data', {
         connection_id: selectedConnection.value,
         table_name: selectedTable.value,
         id: row.id,
@@ -528,8 +528,8 @@ const editRow = (row) => {
 const saveData = async () => {
   try {
     const url = editDialog.isEdit
-      ? '/admin/featuredbadmin/api/update-row'
-      : '/admin/featuredbadmin/api/insert-row'
+      ? '/admin/featuredbadmin/data'
+      : '/admin/featuredbadmin/data'
 
     const params = {
       connection_id: selectedConnection.value,
@@ -566,7 +566,7 @@ const deleteRow = async (row) => {
       type: 'warning'
     })
 
-    const response = await axios.post('/admin/featuredbadmin/api/delete-row', {
+    const response = await axios.post('/admin/featuredbadmin/data', {
       connection_id: selectedConnection.value,
       table_name: selectedTable.value,
       id: row.id
@@ -591,7 +591,7 @@ const deleteRow = async (row) => {
  */
 const exportData = async () => {
   try {
-    const response = await axios.post('/admin/featuredbadmin/api/export-data', {
+    const response = await axios.post('/admin/featuredbadmin/data', {
       connection_id: selectedConnection.value,
       table_name: selectedTable.value,
       format: 'csv'
