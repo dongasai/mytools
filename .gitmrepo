@@ -25,11 +25,11 @@ modules:
     path: Modules/ABackup/
     remote: ssh://git@192.168.4.101:32128/laravel_module/ABackup.git
     branch: main
-  AClean:
-    name: AClean
-    path: Modules/AClean/
-    remote: ssh://git@192.168.4.101:32128/laravel_module/AClean.git
-    branch: main
+  ACleanup:
+    name: ACleanup
+    path: Modules/ACleanup/
+    remote: ssh://git@192.168.4.101:32128/laravel_module/ACleanup.git
+    branch: master
   AFile:
     name: AFile
     path: Modules/AFile/
@@ -39,16 +39,11 @@ modules:
     name: Application
     path: Modules/Application/
     remote: ssh://git@192.168.4.101:32128/laravel_module/Application.git
-    branch: master
+    branch: noproto
   China:
     name: China
     path: Modules/China/
     remote: ssh://git@192.168.4.101:32128/laravel_module/China.git
-    branch: master
-  Cms:
-    name: Cms
-    path: Modules/Cms
-    remote: ssh://git@192.168.4.101:32128/laravel_module/Cms.git
     branch: master
   Notification:
     name: Notification

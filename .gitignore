@@ -96,3 +96,4 @@ Modules/*/.git.bak/
 /composer.phar
 /public/guanli/
 public/upload
+Modules/ABackup//.git/

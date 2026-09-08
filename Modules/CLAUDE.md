@@ -26,6 +26,7 @@
 业务模块层（核心业务逻辑）
 ├── MyToolsMain = 主模块（项目核心功能、后台首页）
 ├── FeatureExcel = Excel 导入导出引擎（模板类驱动）
+├── FeatureDbadmin = 数据库管理员（数据库/模式/表CRUD操作）
 ├── AFile = 文件管理模块（文件/图片上传、存储、访问）
 └── Application = 应用通用模块（应用通用定义）
 
@@ -108,6 +109,21 @@
 **对外服务**: ModuleFeatureExcelService（静态方法）
 
 **数据表前缀**: 无独立数据表
+
+---
+
+### FeatureDbadmin - 数据库管理员模块
+
+**模块定位**: 数据库管理员工具，提供数据库/模式/表的 CRUD 操作和可视化管理
+
+**核心功能**:
+- 数据库连接管理（创建/删除/查看）
+- Schema 模式管理（创建/删除/权限管理）
+- 表结构管理（查看/导出/创建/修改/删除）
+- 数据管理（浏览/编辑/导入导出）
+- SQL 查询工具（执行/历史/格式化）
+
+**数据表前缀**: `feature_dbadmin_`
 
 ---
 
@@ -244,12 +260,13 @@
 
 ## 八、模块启用状态
 
-**总模块数**: 10 个
+**总模块数**: 11 个
 
-**已启用**: 9 个
+**已启用**: 10 个
 - MyToolsMain - 主模块
 - ABase - 基础工具
 - AFile - 文件管理
+- FeatureDbadmin - 数据库管理员
 - Application - 应用通用
 - China - 中国区数据
 - DcatAdmin - 超管后台
@@ -316,6 +333,7 @@ Models → Services → Logics → Controllers(模块内的DcatAdmin入口)
 - [MyToolsMain](./MyToolsMain/) - 主模块
 - [FeatureAi](./FeatureAi/) - AI 功能（未启用）
 - [FeatureExcel](./FeatureExcel/) - Excel 导入导出引擎
+- [FeatureDbadmin](./FeatureDbadmin/) - 数据库管理员
 - [AFile](./AFile/) - 文件管理
 - [Application](./Application/) - 应用通用
 - [China](./China/) - 中国区数据
@@ -332,5 +350,5 @@ Models → Services → Logics → Controllers(模块内的DcatAdmin入口)
 
 ---
 
-**更新时间**: 2026-09-04
+**更新时间**: 2026-09-08
 **维护者**: 开发团队
