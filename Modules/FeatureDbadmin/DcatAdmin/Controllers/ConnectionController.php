@@ -1,0 +1,216 @@
+<?php
+
+namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
+
+use Dcat\Admin\Layout\Content;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Validator;
+use Modules\FeatureDbadmin\Models\Connection;
+use Modules\FeatureDbadmin\Services\DatabaseService;
+
+/**
+ * 数据库连接管理控制器
+ *
+ * 数据库连接 CRUD 管理
+ */
+class ConnectionController extends Controller
+{
+    /**
+     * 连接列表页面
+     *
+     * @param Content $content
+     * @return Content
+     */
+    public function index(Content $content): Content
+    {
+        $connections = DatabaseService::getConnections(false);
+
+        return $content
+            ->title('连接管理')
+            ->description('数据库连接配置管理')
+            ->body(view('featuredbadmin::connection.index', [
+                'connections' => $connections,
+            ]));
+    }
+
+    /**
+     * 连接列表 JSON 接口
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function list()
+    {
+        $connections = DatabaseService::getConnections(false);
+
+        return response()->json([
+            'data' => $connections,
+            'total' => count($connections),
+        ]);
+    }
+
+    /**
+     * 创建连接
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:100|unique:feature_dbadmin_connections,name',
+            'driver' => 'required|in:mysql,pgsql,sqlite',
+            'host' => 'required_if:driver,mysql,pgsql|string|max:100',
+            'port' => 'nullable|integer|min:1|max:65535',
+            'database' => 'required|string|max:100',
+            'username' => 'required_if:driver,mysql,pgsql|string|max:100',
+            'password' => 'nullable|string',
+            'charset' => 'nullable|string|max:20',
+            'collation' => 'nullable|string|max:50',
+            'is_active' => 'nullable|boolean',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'data' => null,
+            ], 422);
+        }
+
+        $data = $validator->validated();
+        $data['creator_id'] = auth()->id();
+        $data['is_active'] = $data['is_active'] ?? true;
+
+        // 创建连接
+        $connection = Connection::create($data);
+
+        // 测试连接
+        $testResult = $connection->testConnection();
+
+        if (!$testResult['success']) {
+            // 测试失败，删除刚创建的连接
+            $connection->delete();
+
+            return response()->json([
+                'success' => false,
+                'message' => '连接测试失败: ' . $testResult['message'],
+                'data' => null,
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => '连接创建成功',
+            'data' => $connection->toArray(),
+        ]);
+    }
+
+    /**
+     * 更新连接
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request, int $id)
+    {
+        $connection = Connection::find($id);
+
+        if (!$connection) {
+            return response()->json([
+                'success' => false,
+                'message' => '连接不存在',
+                'data' => null,
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:100|unique:feature_dbadmin_connections,name,' . $id,
+            'driver' => 'required|in:mysql,pgsql,sqlite',
+            'host' => 'required_if:driver,mysql,pgsql|string|max:100',
+            'port' => 'nullable|integer|min:1|max:65535',
+            'database' => 'required|string|max:100',
+            'username' => 'required_if:driver,mysql,pgsql|string|max:100',
+            'password' => 'nullable|string',
+            'charset' => 'nullable|string|max:20',
+            'collation' => 'nullable|string|max:50',
+            'is_active' => 'nullable|boolean',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'data' => null,
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        // 更新连接
+        $connection->update($data);
+
+        // 刷新模型
+        $connection->refresh();
+
+        // 测试连接
+        $testResult = $connection->testConnection();
+
+        if (!$testResult['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => '连接测试失败: ' . $testResult['message'],
+                'data' => $connection->toArray(),
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => '连接更新成功',
+            'data' => $connection->toArray(),
+        ]);
+    }
+
+    /**
+     * 删除连接
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy(int $id)
+    {
+        $connection = Connection::find($id);
+
+        if (!$connection) {
+            return response()->json([
+                'success' => false,
+                'message' => '连接不存在',
+                'data' => null,
+            ], 404);
+        }
+
+        $connection->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => '连接删除成功',
+            'data' => null,
+        ]);
+    }
+
+    /**
+     * 测试连接
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function test(int $id)
+    {
+        $result = DatabaseService::testConnection($id);
+
+        return response()->json($result);
+    }
+}
