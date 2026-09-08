@@ -23,18 +23,18 @@ Modules/{ModuleName}/config/admin_menu.php
 
 ### 1.2 申请菜单 ID 段
 
-**ID 段统一在 `Modules/AdminId.md`（项目根目录）中管理和维护**，按业务域划分。
+**ID 段统一在 `Modules/DcatAdminId.md`（项目根目录）中管理和维护**，按业务域划分。
 
 操作步骤：
 
-1. **先查**：打开 `Modules/AdminId.md`，确认模块所属业务域和已有的 ID 分配
-2. **再申**：如果模块尚未分配 ID 段，在 `AdminId.md` 对应域下追加一行：
+1. **先查**：打开 `Modules/DcatAdminId.md`，确认模块所属业务域和已有的 ID 分配
+2. **再申**：如果模块尚未分配 ID 段，在 `DcatAdminId.md` 对应域下追加一行：
    ```
    //  XXxxx ModuleName 模块 说明
    ```
 3. **后取**：顶级父菜单取 ID 段的起始值（如 `18001`），子菜单依次递增
 
-示例 —— 为 Im 模块申请 ID 段后，在 `AdminId.md` 的功能模块区域追加：
+示例 —— 为 Im 模块申请 ID 段后，在 `DcatAdminId.md` 的功能模块区域追加：
 ```
 //  21000 Im 模块 即时通讯
 ```

@@ -78,6 +78,12 @@ const dangerousPatterns = [
             /cd\s+/i
         ],
         message: "禁止切换目录,工作目录禁止改变"
+    },
+    {
+        patterns: [
+            /php artisan module:make-command\s+/i
+        ],
+        message: "不要使用module:make-command命令,它生成的文件不符合项目规范,建议阅读Demo5模块的案例后创建文件"
     }
 ];
 
