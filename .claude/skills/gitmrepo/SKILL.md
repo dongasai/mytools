@@ -14,3 +14,5 @@ gitmrepo代码管理
 - 如有submodule,要移除submodule
 - 要明确submodule和mrepo不是一个东西,项目使用的mrepo而不是submodule
 - 如遇到模块目录始终识别为submodule,则'先将 模块的.git备份到 .git.bak ,然后加入,提交,再改回来'
+- 不要模块关联到主仓库
+- **严格区分主仓库 和 模块仓库**

@@ -13,8 +13,8 @@ modules:
   Demo5:
     name: Demo5
     path: Modules/Demo5
-    remote: ssh://git@192.168.4.101:32128/laravel_module/demo5.git
-    branch: master
+    remote: git@github.com:dongasai/mytools.git
+    branch: noproto
   ABase:
     name: ABase
     path: Modules/ABase/
