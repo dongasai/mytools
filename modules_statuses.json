@@ -7,5 +7,6 @@
     "DcatAdmin": true,
     "Debug": true,
     "Demo5": true,
-    "FeatureExcel": true
+    "FeatureExcel": true,
+    "FeatureDbadmin": true
 }

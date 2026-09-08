@@ -2,7 +2,6 @@
 
 namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
 
-use Dcat\Admin\Layout\Content;
 use Illuminate\Routing\Controller;
 use Modules\FeatureDbadmin\Models\QueryHistory;
 use Modules\FeatureDbadmin\Services\DatabaseService;
@@ -17,37 +16,13 @@ class DashboardController extends Controller
     /**
      * 仪表盘首页
      *
-     * @param Content $content
-     * @return Content
-     */
-    public function index(Content $content): Content
-    {
-        $stats = $this->getStats();
-
-        return $content
-            ->title('数据库管理员工具')
-            ->description('系统概览')
-            ->body(view('featuredbadmin::dashboard.index', [
-                'stats' => $stats,
-            ]));
-    }
-
-    /**
-     * 获取统计数据
+     * 返回 Vue 页面（无后台布局嵌套）
      *
-     * @return array<string, mixed>
+     * @return \Illuminate\View\View
      */
-    private function getStats(): array
+    public function index()
     {
-        $connections = DatabaseService::getConnections(false);
-        $activeConnections = DatabaseService::getConnections(true);
-
-        return [
-            'connections_count' => count($connections),
-            'active_connections_count' => count($activeConnections),
-            'queries_count' => QueryHistory::count(),
-            'today_queries_count' => QueryHistory::whereDate('created_at', today())->count(),
-        ];
+        return view('featuredbadmin::vue.dashboard');
     }
 
     /**

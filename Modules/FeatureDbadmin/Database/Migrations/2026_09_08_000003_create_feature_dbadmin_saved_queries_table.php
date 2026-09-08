@@ -32,9 +32,9 @@ return new class extends Migration
             $table->softDeletes()->comment('软删除时间');
 
             // 索引
-            $table->index('user_id', 'idx_user_id');
-            $table->index('is_public', 'idx_is_public');
-            $table->index('connection_name', 'idx_connection_name');
+            $table->index('user_id', 'idx_saved_queries_user_id');
+            $table->index('is_public', 'idx_saved_queries_is_public');
+            $table->index('connection_name', 'idx_saved_queries_connection_name');
 
             $table->comment('保存的查询表');
         });

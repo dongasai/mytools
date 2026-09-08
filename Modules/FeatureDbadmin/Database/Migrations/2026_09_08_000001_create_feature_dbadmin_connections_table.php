@@ -38,9 +38,9 @@ return new class extends Migration
             $table->softDeletes()->comment('软删除时间');
 
             // 索引
-            $table->index('driver', 'idx_driver');
-            $table->index('is_active', 'idx_is_active');
-            $table->index('created_by', 'idx_created_by');
+            $table->index('driver', 'idx_connections_driver');
+            $table->index('is_active', 'idx_connections_is_active');
+            $table->index('created_by', 'idx_connections_created_by');
 
             $table->comment('数据库连接配置表');
         });

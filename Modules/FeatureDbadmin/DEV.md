@@ -114,84 +114,95 @@
 
 ### 阶段2: 后端 JSON 接口（优先级：高）
 **时间**: 2 天
-**状态**: ⏸️ 待开始
+**状态**: ✅ 已完成
 
 #### 2.1 ConnectionController
-- [ ] `index()` - HTML 页面
-- [ ] `list()` - JSON 接口：连接列表
-- [ ] `store()` - JSON 接口：创建连接
-- [ ] `update()` - JSON 接口：更新连接
-- [ ] `destroy()` - JSON 接口：删除连接
-- [ ] `test()` - JSON 接口：测试连接
+- [x] `index()` - HTML 页面
+- [x] `list()` - JSON 接口：连接列表
+- [x] `store()` - JSON 接口：创建连接
+- [x] `update()` - JSON 接口：更新连接
+- [x] `destroy()` - JSON 接口：删除连接
+- [x] `test()` - JSON 接口：测试连接
 
 #### 2.2 TableController
-- [ ] `index()` - HTML 页面
-- [ ] `list()` - JSON 接口：表列表
-- [ ] `structure()` - JSON 接口：表结构详情
-- [ ] `export()` - JSON 接口：导出表结构
+- [x] `index()` - HTML 页面
+- [x] `list()` - JSON 接口：表列表
+- [x] `structure()` - JSON 接口：表结构详情
+- [x] `export()` - JSON 接口：导出表结构
 
 #### 2.3 DataBrowserController
-- [ ] `index()` - HTML 页面
-- [ ] `list()` - JSON 接口：数据列表
-- [ ] `row()` - JSON 接口：单行数据
-- [ ] `create()` - JSON 接口：新增数据
-- [ ] `update()` - JSON 接口：更新数据
-- [ ] `delete()` - JSON 接口：删除数据
+- [x] `index()` - HTML 页面
+- [x] `list()` - JSON 接口：数据列表
+- [x] `row()` - JSON 接口：单行数据
+- [x] `create()` - JSON 接口：新增数据
+- [x] `update()` - JSON 接口：更新数据
+- [x] `delete()` - JSON 接口：删除数据
 
 #### 2.4 QueryToolController
-- [ ] `index()` - HTML 页面
-- [ ] `execute()` - JSON 接口：执行查询
-- [ ] `history()` - JSON 接口：查询历史
-- [ ] `save()` - JSON 接口：保存查询
+- [x] `index()` - HTML 页面
+- [x] `execute()` - JSON 接口：执行查询
+- [x] `history()` - JSON 接口：查询历史
+- [x] `save()` - JSON 接口：保存查询
 
 #### 2.5 DashboardController
-- [ ] `index()` - HTML 页面
-- [ ] `stats()` - JSON 接口：统计数据
+- [x] `index()` - HTML 页面
+- [x] `stats()` - JSON 接口：统计数据
+
+#### 2.6 路由配置
+- [x] HTML 路由（5 条）
+- [x] JSON 路由（19 条）
+- [x] 权限控制配置
 
 ---
 
 ### 阶段3: Vue 前端页面（优先级：中）
 **时间**: 5 天
-**状态**: ⏸️ 待开始
+**状态**: ✅ 已完成
 
 #### 3.1 构建工具配置
-- [ ] 安装 Vue 3
-- [ ] 安装 Element Plus
-- [ ] 安装 Monaco Editor（SQL 编辑器）
-- [ ] 配置 vite.config.js
-- [ ] 配置 resources/js/app.js
+- [x] 使用项目统一 Vite 配置（自动入口发现）
+- [x] 集成 Monaco Editor（SQL 编辑器）
+- [x] 集成 sql-formatter（SQL 格式化）
 
 #### 3.2 Vue 组件开发
-- [ ] `Dashboard.vue` - 仪表盘
+- [x] `Dashboard.vue` - 仪表盘
   - 连接统计卡片
   - 最近查询历史
   - 快捷操作入口
-- [ ] `ConnectionManager.vue` - 连接管理
+- [x] `ConnectionManager.vue` - 连接管理
   - 连接列表（卡片）
   - 创建/编辑表单
   - 测试连接功能
-- [ ] `TableManager.vue` - 表管理
+- [x] `TableManager.vue` - 表管理
   - 表列表（表格）
   - 表结构查看（模态框）
   - 表结构导出
   - 收藏表功能
-- [ ] `DataBrowser.vue` - 数据浏览
+- [x] `DataBrowser.vue` - 数据浏览
   - 数据表格展示（分页、排序、筛选）
   - 行内编辑
   - 数据新增/删除
   - 数据导出
-- [ ] `QueryTool.vue` - SQL 查询工具
+- [x] `QueryTool.vue` - SQL 查询工具
   - SQL 编辑器（Monaco Editor）
   - 查询执行
   - 结果展示（表格）
   - 查询历史
   - 保存查询
 
-#### 3.3 公共组件
-- [ ] `TableCard.vue` - 表格卡片组件
-- [ ] `SqlEditor.vue` - SQL 编辑器组件
-- [ ] `Pagination.vue` - 分页组件
-- [ ] `Loading.vue` - 加载组件
+#### 3.3 Vue 入口文件
+- [x] `dashboard.js` - Dashboard 入口
+- [x] `connection-manager.js` - ConnectionManager 入口
+- [x] `table-manager.js` - TableManager 入口
+- [x] `data-browser.js` - DataBrowser 入口
+- [x] `query-tool.js` - QueryTool 入口
+
+#### 3.4 风格优化
+- [x] DBeaver 简约风格
+- [x] 左右分栏布局
+- [x] 紧凑表格设计
+- [x] 扁平按钮样式
+- [x] 低对比度配色
 
 ---
 
@@ -366,14 +377,16 @@ Models → Services → Logics → Controllers
 
 ## 进度追踪
 
-**当前阶段**: 阶段2 - 后端 JSON 接口
-**当前任务**: 创建 Controllers
-**完成进度**: 20% (阶段1已完成)
+**当前阶段**: 阶段4 - Blade 视图和路由
+**当前任务**: 创建 Blade 视图
+**完成进度**: 60% (阶段1、阶段2、阶段3已完成)
 **开始时间**: 2026-09-08
 **预计完成**: 2026-09-21
 
 **已完成的阶段**:
 - ✅ 阶段1: 基础设施 + 后端服务 (100%)
+- ✅ 阶段2: 后端 JSON 接口 (100%)
+- ✅ 阶段3: Vue 前端页面 (100%)
 
 ---
 

@@ -29,10 +29,10 @@ return new class extends Migration
             $table->timestamps();
 
             // 索引
-            $table->index('user_id', 'idx_user_id');
-            $table->index('connection_name', 'idx_connection_name');
-            $table->index('executed_at', 'idx_executed_at');
-            $table->index('query_type', 'idx_query_type');
+            $table->index('user_id', 'idx_query_histories_user_id');
+            $table->index('connection_name', 'idx_query_histories_connection_name');
+            $table->index('executed_at', 'idx_query_histories_executed_at');
+            $table->index('query_type', 'idx_query_histories_query_type');
 
             $table->comment('SQL 查询历史表');
         });
