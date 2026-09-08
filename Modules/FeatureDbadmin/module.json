@@ -1,0 +1,21 @@
+{
+    "name": "FeatureDbadmin",
+    "alias": "featuredbadmin",
+    "description": "数据库管理员模块 - 提供数据库/模式/表的CRUD操作和可视化管理工具",
+    "keywords": [
+        "featuredbadmin"
+    ],
+    "priority": 20,
+    "providers": [
+        "Modules\\FeatureDbadmin\\Providers\\FeatureDbadminServiceProvider",
+        "Modules\\FeatureDbadmin\\Providers\\RouteServiceProvider"
+    ],
+    "files": [],
+    "module_type": "feature",
+    "dcat_admin": true,
+    "api": false,
+    "api_proto": false,
+    "module_requires": [
+        "ABase"
+    ]
+}

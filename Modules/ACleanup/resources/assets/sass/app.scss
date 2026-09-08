@@ -1,0 +1,25 @@
+// Cleanup 模块样式文件
+
+.cleanup-module {
+    // 模块基础样式
+}
+
+.cleanup-progress {
+    height: 4px;
+    background-color: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+
+    &-bar {
+        height: 100%;
+        background-color: #28a745;
+        transition: width 0.3s ease;
+    }
+}
+
+.cleanup-status {
+    &-pending { color: #6c757d; }
+    &-running { color: #007bff; }
+    &-completed { color: #28a745; }
+    &-failed { color: #dc3545; }
+}
