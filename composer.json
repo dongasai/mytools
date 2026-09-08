@@ -45,8 +45,7 @@
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
             "Modules\\": "Modules/",
-            "DLaravel\\": "extensions/dlaravel/",
-            "GPBMetadata\\": "Modules/ApiProto/Protobuf/GPBMetadata/"
+            "DLaravel\\": "extensions/dlaravel/"
         },
         "classmap": []
     },
@@ -88,8 +87,7 @@
             "php artisan apiproto:gather-proto",
             "php artisan apiproto:generate-proto",
             "php artisan apiproto:fix-namespace",
-            "php artisan apiproto:generate-pathlist",
-            "git add -f Modules/ApiProto/Protobuf/ Modules/ApiProto/config/pathlist.php"
+            "php artisan apiproto:generate-pathlist"
         ]
     },
     "extra": {
