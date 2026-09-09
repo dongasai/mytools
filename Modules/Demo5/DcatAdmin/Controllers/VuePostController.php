@@ -2,9 +2,9 @@
 
 namespace Modules\Demo5\DcatAdmin\Controllers;
 
-use Dcat\Admin\Http\Controllers\AdminController;
 use Dcat\Admin\Layout\Content;
 use Illuminate\Http\JsonResponse;
+use Modules\DcatAdmin\DcatAdmin\AdminController;
 use Modules\Demo5\Models\Demo5Post;
 
 /**
@@ -17,15 +17,7 @@ class VuePostController extends AdminController
      */
     public function index(Content $content)
     {
-        // standalone 模式直接返回视图（无 Dcat Admin 包裹）
-        if (request()->get('standalone')) {
-            return view('module_demo5::vue.posts');
-        }
-
-        // 正常模式返回带 Dcat Admin 布局的响应
-        return $content
-            ->title('Vue 文章管理')
-            ->body(view('module_demo5::vue.posts'));
+        return $this->vueview($content, 'module_demo5::vue.posts', []);
     }
 
     /**

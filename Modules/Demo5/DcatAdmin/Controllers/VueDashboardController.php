@@ -2,9 +2,9 @@
 
 namespace Modules\Demo5\DcatAdmin\Controllers;
 
-use Dcat\Admin\Http\Controllers\AdminController;
 use Dcat\Admin\Layout\Content;
 use Illuminate\Http\JsonResponse;
+use Modules\DcatAdmin\DcatAdmin\AdminController;
 use Modules\Demo5\Models\Demo5Post;
 use Modules\Demo5\Models\Demo5Comment;
 use Modules\Demo5\Models\Demo5User;
@@ -19,16 +19,7 @@ class VueDashboardController extends AdminController
      */
     public function index(Content $content)
     {
-        // standalone 模式直接返回视图（无 Dcat Admin 包裹）
-        if (request()->get('standalone')) {
-            return view('module_demo5::vue.dashboard');
-        }
-
-        // 正常模式返回带 Dcat Admin 布局的响应
-        return $content
-            ->title('Vue 仪表盘')
-            ->description('基于 Vue 3 的实时数据仪表盘')
-            ->body(view('module_demo5::vue.dashboard'));
+        return $this->vueview($content, 'module_demo5::vue.dashboard', []);
     }
 
     /**
