@@ -141,7 +141,7 @@
     ]
   },
   "Modules/FeatureDbadmin/resources/js/app.js": {
-    "file": "assets/featuredbadmin-app-BofpCasS.js",
+    "file": "assets/featuredbadmin-app-DA1Z6_c-.js",
     "name": "app",
     "src": "Modules/FeatureDbadmin/resources/js/app.js",
     "isEntry": true,
@@ -158,16 +158,16 @@
       "Modules/FeatureDbadmin/resources/js/views/DataBrowser.vue",
       "Modules/FeatureDbadmin/resources/js/views/DataEditor.vue",
       "Modules/FeatureDbadmin/resources/js/views/DataViewer.vue",
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/views/TableStructure.vue"
     ],
     "css": [
-      "assets/app-DPGmuM1N.css",
+      "assets/app-Bc7OGrdO.css",
       "assets/index-Br5ArAPC.css"
     ]
   },
   "Modules/FeatureDbadmin/resources/js/views/ConnectionManager.vue": {
-    "file": "assets/ConnectionManager-BAA5RCJN.js",
+    "file": "assets/ConnectionManager-AceEaq-c.js",
     "name": "ConnectionManager",
     "src": "Modules/FeatureDbadmin/resources/js/views/ConnectionManager.vue",
     "isDynamicEntry": true,
@@ -184,7 +184,7 @@
     ]
   },
   "Modules/FeatureDbadmin/resources/js/views/DataBrowser.vue": {
-    "file": "assets/DataBrowser-DZZJeFJY.js",
+    "file": "assets/DataBrowser-mvt8R8Qd.js",
     "name": "DataBrowser",
     "src": "Modules/FeatureDbadmin/resources/js/views/DataBrowser.vue",
     "isDynamicEntry": true,
@@ -202,7 +202,7 @@
     ]
   },
   "Modules/FeatureDbadmin/resources/js/views/DataEditor.vue": {
-    "file": "assets/DataEditor-Dkkhrhwl.js",
+    "file": "assets/DataEditor-BWKKqQz_.js",
     "name": "DataEditor",
     "src": "Modules/FeatureDbadmin/resources/js/views/DataEditor.vue",
     "isDynamicEntry": true,
@@ -220,7 +220,7 @@
     ]
   },
   "Modules/FeatureDbadmin/resources/js/views/DataViewer.vue": {
-    "file": "assets/DataViewer--51mF7Gp.js",
+    "file": "assets/DataViewer-CdH3zK4O.js",
     "name": "DataViewer",
     "src": "Modules/FeatureDbadmin/resources/js/views/DataViewer.vue",
     "isDynamicEntry": true,
@@ -237,7 +237,7 @@
     ]
   },
   "Modules/FeatureDbadmin/resources/js/views/TableList.vue": {
-    "file": "assets/TableList-BYrx8DKY.js",
+    "file": "assets/TableList-DFBySa5H.js",
     "name": "TableList",
     "src": "Modules/FeatureDbadmin/resources/js/views/TableList.vue",
     "isDynamicEntry": true,
@@ -269,7 +269,7 @@
     ]
   },
   "Modules/FeatureDbadmin/resources/js/views/Welcome.vue": {
-    "file": "assets/Welcome-pODnmZ38.js",
+    "file": "assets/Welcome-B-u7d0KM.js",
     "name": "Welcome",
     "src": "Modules/FeatureDbadmin/resources/js/views/Welcome.vue",
     "isDynamicEntry": true,
@@ -305,8 +305,8 @@
     "file": "assets/QueryTool-DUVHknuf.css",
     "src": "_QueryTool-!~{00n}~.js"
   },
-  "_QueryTool-Dh-c3uyH.js": {
-    "file": "assets/QueryTool-Dh-c3uyH.js",
+  "_QueryTool-rGeRBoeR.js": {
+    "file": "assets/QueryTool-rGeRBoeR.js",
     "name": "QueryTool",
     "isDynamicEntry": true,
     "imports": [
@@ -564,12 +564,12 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/freemarker2/freemarker2.js": {
-    "file": "assets/freemarker2-Bk991qf-.js",
+    "file": "assets/freemarker2-DxvXfMLp.js",
     "name": "freemarker2",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/freemarker2/freemarker2.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -599,12 +599,12 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/handlebars/handlebars.js": {
-    "file": "assets/handlebars-D1ocoyjp.js",
+    "file": "assets/handlebars-BkMQsw_K.js",
     "name": "handlebars",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/handlebars/handlebars.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -622,12 +622,12 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/html/html.js": {
-    "file": "assets/html-u29hqIB7.js",
+    "file": "assets/html-CZ8HaD7m.js",
     "name": "html",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/html/html.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -651,13 +651,13 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/javascript/javascript.js": {
-    "file": "assets/javascript-nLfYSUkV.js",
+    "file": "assets/javascript-EbSlkXIj.js",
     "name": "javascript",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/javascript/javascript.js",
     "isDynamicEntry": true,
     "imports": [
       "node_modules/monaco-editor/esm/vs/basic-languages/typescript/typescript.js",
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -693,12 +693,12 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/liquid/liquid.js": {
-    "file": "assets/liquid-Ct3P9Luz.js",
+    "file": "assets/liquid-D2UC79-Q.js",
     "name": "liquid",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/liquid/liquid.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -728,12 +728,12 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/mdx/mdx.js": {
-    "file": "assets/mdx-mrvGhNnx.js",
+    "file": "assets/mdx-CfPsfdjg.js",
     "name": "mdx",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/mdx/mdx.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -835,12 +835,12 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/python/python.js": {
-    "file": "assets/python-Ch3qLYU-.js",
+    "file": "assets/python-BbNLcXlX.js",
     "name": "python",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/python/python.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -864,12 +864,12 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/razor/razor.js": {
-    "file": "assets/razor-CertVLTs.js",
+    "file": "assets/razor-BPJVh53m.js",
     "name": "razor",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/razor/razor.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -995,12 +995,12 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/typescript/typescript.js": {
-    "file": "assets/typescript-BSk7kT0p.js",
+    "file": "assets/typescript-BPTAFV8w.js",
     "name": "typescript",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/typescript/typescript.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -1024,12 +1024,12 @@
     "isDynamicEntry": true
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/xml/xml.js": {
-    "file": "assets/xml-CCaprS2a.js",
+    "file": "assets/xml-CeSBGKqE.js",
     "name": "xml",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/xml/xml.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -1041,12 +1041,12 @@
     ]
   },
   "node_modules/monaco-editor/esm/vs/basic-languages/yaml/yaml.js": {
-    "file": "assets/yaml-sPueDgUI.js",
+    "file": "assets/yaml-DyjxKmIf.js",
     "name": "yaml",
     "src": "node_modules/monaco-editor/esm/vs/basic-languages/yaml/yaml.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -1058,12 +1058,12 @@
     ]
   },
   "node_modules/monaco-editor/esm/vs/language/css/cssMode.js": {
-    "file": "assets/cssMode-DwVd64Qk.js",
+    "file": "assets/cssMode-CiKvxdsd.js",
     "name": "cssMode",
     "src": "node_modules/monaco-editor/esm/vs/language/css/cssMode.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -1075,12 +1075,12 @@
     ]
   },
   "node_modules/monaco-editor/esm/vs/language/html/htmlMode.js": {
-    "file": "assets/htmlMode-CvRCbAA0.js",
+    "file": "assets/htmlMode-Dv4SbzP1.js",
     "name": "htmlMode",
     "src": "node_modules/monaco-editor/esm/vs/language/html/htmlMode.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -1092,12 +1092,12 @@
     ]
   },
   "node_modules/monaco-editor/esm/vs/language/json/jsonMode.js": {
-    "file": "assets/jsonMode-Dn2xe5mR.js",
+    "file": "assets/jsonMode-Dr1qwSld.js",
     "name": "jsonMode",
     "src": "node_modules/monaco-editor/esm/vs/language/json/jsonMode.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
@@ -1109,12 +1109,12 @@
     ]
   },
   "node_modules/monaco-editor/esm/vs/language/typescript/tsMode.js": {
-    "file": "assets/tsMode-DQUQR1g9.js",
+    "file": "assets/tsMode-DjOn9tn7.js",
     "name": "tsMode",
     "src": "node_modules/monaco-editor/esm/vs/language/typescript/tsMode.js",
     "isDynamicEntry": true,
     "imports": [
-      "_QueryTool-Dh-c3uyH.js",
+      "_QueryTool-rGeRBoeR.js",
       "Modules/FeatureDbadmin/resources/js/app.js",
       "_vue-vendor-dmIdaenR.js",
       "_element-plus-BHLv5ZNl.js",
