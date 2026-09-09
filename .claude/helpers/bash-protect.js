@@ -22,7 +22,7 @@ const dangerousPatterns = [
             /git\s+push\s+.*--force/i,
             /git\s+push\s+.*-f\s/i
         ],
-        message: "禁止强制推送（git push --force/-f），如需强制推送请使用 --force-with-lease"
+        message: "禁止强制推送（git push --force/-f），任何时候都不能覆盖远程仓库的提交历史,你认为需要-f的需求都是错误的"
     },
     {
         patterns: [
