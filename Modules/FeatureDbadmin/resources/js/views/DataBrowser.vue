@@ -1,88 +1,44 @@
 <template>
   <div class="data-browser">
-    <!-- 页面标题 -->
-    <div class="page-title">数据浏览器</div>
-
     <!-- 工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
-        <el-select
-          v-model="selectedConnection"
-          placeholder="选择数据库连接"
-          @change="handleConnectionChange"
-          class="toolbar-select"
-        >
-          <el-option
-            v-for="conn in connections"
-            :key="conn.id"
-            :label="conn.name"
-            :value="conn.id"
-          />
-        </el-select>
-
-        <el-select
-          v-model="selectedTable"
-          placeholder="选择数据表"
-          :disabled="!selectedConnection"
-          @change="handleTableChange"
-          class="toolbar-select table-select"
-        >
-          <el-option
-            v-for="table in tables"
-            :key="table.name"
-            :label="table.name"
-            :value="table.name"
-          >
-            <span>{{ table.name }}</span>
-            <span class="table-comment">{{ table.comment }}</span>
-          </el-option>
-        </el-select>
-
-        <el-button
-          type="primary"
-          :disabled="!selectedTable"
-          @click="loadData"
-        >
-          加载数据
-        </el-button>
-
-        <el-button
-          type="primary"
-          :disabled="!selectedTable"
-          @click="openAddDialog"
-        >
+        <el-button type="primary" @click="openAddDialog">
+          <el-icon><Plus /></el-icon>
           新增
         </el-button>
 
-        <el-button
-          :disabled="!selectedTable"
-          @click="exportData"
-        >
+        <el-button @click="exportData">
+          <el-icon><Download /></el-icon>
           导出
+        </el-button>
+
+        <el-button @click="refreshData">
+          <el-icon><Refresh /></el-icon>
+          刷新
         </el-button>
       </div>
 
       <!-- 筛选栏 -->
-      <div v-if="selectedTable" class="filter-bar">
+      <div class="filter-bar">
         <el-input
           v-model="filterText"
           placeholder="输入关键词筛选..."
           clearable
           class="filter-input"
           @keyup.enter="applyFilter"
-        />
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
         <el-button type="primary" @click="applyFilter">筛选</el-button>
         <el-button @click="clearFilter">清除</el-button>
       </div>
     </div>
 
     <!-- 数据表格 -->
-    <div v-if="selectedTable" class="table-container">
-      <div class="table-header">
-        <span class="table-title">{{ selectedTable }}</span>
-        <span class="record-count">共 {{ total }} 条记录</span>
-      </div>
-
+    <div class="table-container">
       <el-table
         v-loading="loading"
         :data="tableData"
@@ -151,8 +107,6 @@
           @current-change="handlePageChange"
         />
       </div>
-
-      <el-empty v-if="!loading && tableData.length === 0" description="暂无数据" />
     </div>
 
     <!-- 新增/编辑对话框 -->
@@ -199,37 +153,24 @@
 </template>
 
 <script setup>
-/**
- * DataBrowser.vue
- * 数据浏览器组件
- *
- * 功能:
- * - 数据表格展示（分页）
- * - 排序和筛选
- * - 行内编辑
- * - 新增/删除数据
- * - 导出数据
- *
- * 关键逻辑:
- * - 分页参数: page, per_page
- * - 排序参数: order_by
- * - 筛选参数: filters
- * - 双击单元格进入编辑模式
- */
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Download, Refresh, Search } from '@element-plus/icons-vue'
 import axios from 'axios'
+
+const props = defineProps({
+  connectionId: {
+    type: Number,
+    required: true
+  },
+  tableName: {
+    type: String,
+    required: true
+  }
+})
 
 // ==================== 状态定义 ====================
 
-/** 连接列表 */
-const connections = ref([])
-/** 表列表 */
-const tables = ref([])
-/** 选中的连接 */
-const selectedConnection = ref('')
-/** 选中的表 */
-const selectedTable = ref('')
 /** 表结构列信息 */
 const columns = ref([])
 /** 表格数据 */
@@ -278,87 +219,36 @@ const editableColumns = computed(() => {
 
 // ==================== 生命周期 ====================
 
-/**
- * 加载连接列表
- */
-const loadConnections = async () => {
-  try {
-    const response = await axios.get('/admin/featuredbadmin/connections')
-    if (response.data.success) {
-      connections.value = response.data.data || []
-    }
-  } catch (error) {
-    console.error('加载连接列表失败:', error)
-    connections.value = [
-      { id: 'mysql', name: 'MySQL 主库' },
-      { id: 'local', name: '本地数据库' }
-    ]
-  }
-}
-
-loadConnections()
-
-// ==================== 事件处理 ====================
-
-/**
- * 连接选择变化
- */
-const handleConnectionChange = async () => {
-  selectedTable.value = ''
-  tables.value = []
-  tableData.value = []
-
-  if (!selectedConnection.value) return
-
-  try {
-    const response = await axios.get('/admin/featuredbadmin/tables', {
-      params: { connection_id: selectedConnection.value }
-    })
-    if (response.data.success) {
-      tables.value = response.data.data || []
-    }
-  } catch (error) {
-    console.error('加载表列表失败:', error)
-    tables.value = [
-      { name: 'users', comment: '用户表' },
-      { name: 'orders', comment: '订单表' }
-    ]
-  }
-}
-
-/**
- * 表选择变化
- */
-const handleTableChange = () => {
-  tableData.value = []
-  pagination.page = 1
+onMounted(() => {
   loadTableColumns()
-}
+  loadData()
+})
+
+watch(() => [props.connectionId, props.tableName], () => {
+  loadTableColumns()
+  loadData()
+})
+
+// ==================== 数据加载 ====================
 
 /**
  * 加载表结构列信息
  */
 const loadTableColumns = async () => {
-  if (!selectedTable.value) return
+  if (!props.tableName) return
 
   try {
-    const response = await axios.get('/admin/featuredbadmin/tables', {
+    const response = await axios.get(`/admin/featuredbadmin/tables/${props.tableName}/structure`, {
       params: {
-        connection_id: selectedConnection.value,
-        table_name: selectedTable.value
+        connection_id: props.connectionId
       }
     })
-    if (response.data.success) {
-      columns.value = response.data.data || []
+
+    if (response.data.data) {
+      columns.value = response.data.data.columns || []
     }
   } catch (error) {
     console.error('加载表结构失败:', error)
-    columns.value = [
-      { name: 'id', type: 'bigint', key: 'PRI', sortable: true },
-      { name: 'name', type: 'varchar', sortable: true },
-      { name: 'email', type: 'varchar', sortable: true },
-      { name: 'created_at', type: 'timestamp', sortable: true }
-    ]
   }
 }
 
@@ -366,16 +256,12 @@ const loadTableColumns = async () => {
  * 加载数据
  */
 const loadData = async () => {
-  if (!selectedTable.value) {
-    ElMessage.warning('请先选择数据表')
-    return
-  }
+  if (!props.tableName) return
 
   loading.value = true
   try {
     const params = {
-      connection_id: selectedConnection.value,
-      table_name: selectedTable.value,
+      connection_id: props.connectionId,
       page: pagination.page,
       per_page: pagination.per_page,
       order_by: sortParams.order_by,
@@ -383,26 +269,24 @@ const loadData = async () => {
       filter: filterText.value
     }
 
-    const response = await axios.get('/admin/featuredbadmin/data', { params })
-    if (response.data.success) {
-      const data = response.data.data
-      tableData.value = data.rows || []
-      total.value = data.total || 0
-    } else {
-      ElMessage.error(response.data.message || '加载失败')
+    const response = await axios.get(`/admin/featuredbadmin/data/${props.tableName}`, { params })
+    if (response.data) {
+      tableData.value = response.data.data || []
+      total.value = response.data.total || 0
     }
   } catch (error) {
     console.error('加载数据失败:', error)
     ElMessage.error('加载数据失败')
-    // 模拟数据
-    tableData.value = [
-      { id: 1, name: '张三', email: 'zhangsan@example.com', created_at: '2024-01-15 10:30:00' },
-      { id: 2, name: '李四', email: 'lisi@example.com', created_at: '2024-01-16 14:20:00' }
-    ]
-    total.value = 2
   } finally {
     loading.value = false
   }
+}
+
+/**
+ * 刷新数据
+ */
+const refreshData = () => {
+  loadData()
 }
 
 /**
@@ -479,10 +363,8 @@ const saveCellEdit = async () => {
     row[editingCell.col] = editingCell.value
 
     try {
-      await axios.post('/admin/featuredbadmin/data', {
-        connection_id: selectedConnection.value,
-        table_name: selectedTable.value,
-        id: row.id,
+      await axios.put(`/admin/featuredbadmin/data/${props.tableName}/row/${row.id}`, {
+        connection_id: props.connectionId,
         data: { [editingCell.col]: editingCell.value }
       })
       ElMessage.success('更新成功')
@@ -528,20 +410,18 @@ const editRow = (row) => {
 const saveData = async () => {
   try {
     const url = editDialog.isEdit
-      ? '/admin/featuredbadmin/data'
-      : '/admin/featuredbadmin/data'
+      ? `/admin/featuredbadmin/data/${props.tableName}/row/${editDialog.rowId}`
+      : `/admin/featuredbadmin/data/${props.tableName}/row`
 
     const params = {
-      connection_id: selectedConnection.value,
-      table_name: selectedTable.value,
+      connection_id: props.connectionId,
       data: editDialog.form
     }
 
-    if (editDialog.isEdit) {
-      params.id = editDialog.rowId
-    }
+    const response = editDialog.isEdit
+      ? await axios.put(url, params)
+      : await axios.post(url, params)
 
-    const response = await axios.post(url, params)
     if (response.data.success) {
       ElMessage.success(editDialog.isEdit ? '更新成功' : '新增成功')
       editDialog.visible = false
@@ -566,10 +446,10 @@ const deleteRow = async (row) => {
       type: 'warning'
     })
 
-    const response = await axios.post('/admin/featuredbadmin/data', {
-      connection_id: selectedConnection.value,
-      table_name: selectedTable.value,
-      id: row.id
+    const response = await axios.delete(`/admin/featuredbadmin/data/${props.tableName}/row/${row.id}`, {
+      params: {
+        connection_id: props.connectionId
+      }
     })
 
     if (response.data.success) {
@@ -591,18 +471,19 @@ const deleteRow = async (row) => {
  */
 const exportData = async () => {
   try {
-    const response = await axios.post('/admin/featuredbadmin/data', {
-      connection_id: selectedConnection.value,
-      table_name: selectedTable.value,
-      format: 'csv'
+    const response = await axios.get(`/admin/featuredbadmin/data/${props.tableName}/export`, {
+      params: {
+        connection_id: props.connectionId,
+        format: 'csv'
+      }
     })
 
-    if (response.data.success) {
-      const blob = new Blob([response.data.data.content], { type: 'text/csv' })
+    if (response.data.data) {
+      const blob = new Blob([response.data.data], { type: 'text/csv' })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${selectedTable.value}.csv`
+      link.download = `${props.tableName}.csv`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -632,48 +513,25 @@ const formatCellValue = (value, type) => {
 </script>
 
 <style scoped>
-/* ==================== 主容器 ==================== */
 .data-browser {
-  padding: 16px;
-  background: #f5f5f5;
-  min-height: 100vh;
-}
-
-/* ==================== 页面标题 ==================== */
-.page-title {
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 16px;
-  line-height: 32px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
 }
 
 /* ==================== 工具栏 ==================== */
 .toolbar {
-  background: #fff;
-  border: 1px solid #e8e8e8;
   padding: 12px 16px;
-  margin-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
 }
 
 .toolbar-left {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.toolbar-select {
-  width: 180px;
-}
-
-.table-select {
-  width: 240px;
-}
-
-.table-comment {
-  float: right;
-  color: #999;
-  font-size: 12px;
+  margin-bottom: 8px;
 }
 
 /* ==================== 筛选栏 ==================== */
@@ -681,9 +539,6 @@ const formatCellValue = (value, type) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
 }
 
 .filter-input {
@@ -692,32 +547,29 @@ const formatCellValue = (value, type) => {
 
 /* ==================== 表格容器 ==================== */
 .table-container {
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  padding: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
 }
 
-.table-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e8e8e8;
-  background: #fafafa;
+/* ==================== 单元格编辑 ==================== */
+.cell-editor {
+  padding: 2px;
+}
+
+.cell-content {
+  min-height: 22px;
+  cursor: pointer;
+}
+
+/* ==================== 分页 ==================== */
+.pagination-container {
+  padding: 12px 0;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-end;
 }
 
-.table-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-}
-
-.record-count {
-  font-size: 13px;
-  color: #666;
-}
-
-/* ==================== 表格样式 ==================== */
+/* ==================== Element Plus 样式优化 ==================== */
 :deep(.el-table) {
   color: #333;
 }
@@ -739,75 +591,9 @@ const formatCellValue = (value, type) => {
 }
 
 :deep(.el-table--border) {
-  border: 1px solid #e8e8e8;
+  border: 1px solid #e0e0e0;
 }
 
-:deep(.el-table--border::after) {
-  background-color: #e8e8e8;
-}
-
-:deep(.el-table td.el-table__cell) {
-  border-bottom: 1px solid #f0f0f0;
-}
-
-:deep(.el-table th.el-table__cell) {
-  border-bottom: 1px solid #e8e8e8;
-}
-
-/* ==================== 单元格编辑 ==================== */
-.cell-editor {
-  padding: 2px;
-}
-
-.cell-content {
-  min-height: 22px;
-  cursor: pointer;
-}
-
-/* ==================== 分页 ==================== */
-.pagination-container {
-  padding: 12px 16px;
-  border-top: 1px solid #e8e8e8;
-  display: flex;
-  justify-content: flex-end;
-  background: #fafafa;
-}
-
-:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
-  background-color: #1890ff;
-}
-
-:deep(.el-pagination.is-background .el-pager li:not(.is-disabled):hover) {
-  color: #1890ff;
-}
-
-/* ==================== 按钮样式优化 ==================== */
-:deep(.el-button--primary) {
-  background: #1890ff;
-  border-color: #1890ff;
-}
-
-:deep(.el-button--primary:hover) {
-  background: #40a9ff;
-  border-color: #40a9ff;
-}
-
-:deep(.el-button--primary:disabled) {
-  background: #f5f5f5;
-  border-color: #d9d9d9;
-  color: #bfbfbf;
-}
-
-/* ==================== 选择器样式优化 ==================== */
-:deep(.el-select .el-input.is-focus .el-input__wrapper) {
-  border-color: #1890ff;
-}
-
-:deep(.el-select .el-input__wrapper:hover) {
-  border-color: #1890ff;
-}
-
-/* ==================== 表格标签样式 ==================== */
 :deep(.el-tag) {
   border-radius: 2px;
   font-size: 12px;
@@ -826,10 +612,5 @@ const formatCellValue = (value, type) => {
   background: #e6f7ff;
   border-color: #91d5ff;
   color: #1890ff;
-}
-
-/* ==================== 空状态 ==================== */
-:deep(.el-empty) {
-  padding: 40px 0;
 }
 </style>
