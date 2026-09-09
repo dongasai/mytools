@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\DcatAdmin\DcatAdmin;
 
 use Dcat\Admin\Http\Controllers\AdminController as BaseAdminController;
+use Dcat\Admin\Layout\Content;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -17,6 +18,21 @@ use Illuminate\Http\JsonResponse;
  */
 class AdminController extends BaseAdminController
 {
+
+    protected function vueview(Content $content,$viewname,$data){
+
+        // standalone 模式直接返回视图（无 Dcat Admin 包裹）
+        if (request()->get('standalone')) {
+            return view($viewname,$data);
+        }
+
+        // 正常模式返回带 Dcat Admin 布局的响应
+        return $content
+            ->title('Vue 仪表盘')
+            ->description('基于 Vue 3 的实时数据仪表盘')
+            ->body(view($viewname,$data));
+    }
+
     /**
      * 返回成功 JSON 响应
      *

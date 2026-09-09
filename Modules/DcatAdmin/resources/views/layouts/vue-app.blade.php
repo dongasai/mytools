@@ -1,8 +1,9 @@
 {{-- Vue 应用通用 Layout --}}
-{{-- 自动判断 standalone 参数，决定渲染模式 --}}
+{{-- Content 自动处理 pjax（普通请求渲染后台布局，pjax 请求只返回内容） --}}
+{{-- 布局只需判断 standalone 参数 --}}
 
 @if(request()->get('standalone'))
-    {{-- 独立页面模式（完整 HTML，用于 iframe） --}}
+    {{-- standalone 模式：完整 HTML，用于 iframe 嵌入 --}}
     <!DOCTYPE html>
     <html lang="zh-CN">
     <head>
@@ -18,9 +19,9 @@
     </body>
     </html>
 @else
-    {{-- iframe 容器模式 --}}
+    {{-- 普通模式 / pjax 模式：iframe 容器 --}}
+    {{-- Content 会自动决定是否渲染后台布局 --}}
     <div class="vue-iframe-container">
-        {{-- 新标签打开按钮 --}}
         <a href="{{ url()->current() }}?standalone=1" target="_blank" class="vue-iframe-open-btn" title="在新标签页打开">
             <i class="feather icon-external-link"></i>
         </a>

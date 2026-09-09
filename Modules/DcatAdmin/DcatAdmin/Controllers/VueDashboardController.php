@@ -15,15 +15,7 @@ class VueDashboardController extends AdminController
      */
     public function index(Content $content)
     {
-        // standalone 模式直接返回视图（无 Dcat Admin 包裹）
-        if (request()->get('standalone')) {
-            return view('module_dcatadmin::vue.dashboard');
-        }
-
-        // 正常模式返回带 Dcat Admin 布局的响应
-        return $content
-            ->title('Vue 仪表盘')
-            ->body(view('module_dcatadmin::vue.dashboard'));
+        return $this->vueview($content, 'module_dcatadmin::vue.dashboard', []);
     }
 
     /**
@@ -31,15 +23,7 @@ class VueDashboardController extends AdminController
      */
     public function elementsDemo(Content $content)
     {
-        // standalone 模式直接返回视图（无 Dcat Admin 包裹）
-        if (request()->get('standalone')) {
-            return view('module_dcatadmin::vue.elements-demo');
-        }
-
-        // 正常模式返回带 Dcat Admin 布局的响应
-        return $content
-            ->title('Element Plus 组件演示')
-            ->body(view('module_dcatadmin::vue.elements-demo'));
+        return $this->vueview($content, 'module_dcatadmin::vue.elements-demo', []);
     }
 
     /**
@@ -47,15 +31,7 @@ class VueDashboardController extends AdminController
      */
     public function basicDemo(Content $content)
     {
-        // standalone 模式直接返回视图（无 Dcat Admin 包裹）
-        if (request()->get('standalone')) {
-            return view('module_dcatadmin::vue.basic-demo');
-        }
-
-        // 正常模式返回带 Dcat Admin 布局的响应
-        return $content
-            ->title('基础组件演示')
-            ->body(view('module_dcatadmin::vue.basic-demo'));
+        return $this->vueview($content, 'module_dcatadmin::vue.basic-demo', []);
     }
 
     /**
@@ -63,15 +39,7 @@ class VueDashboardController extends AdminController
      */
     public function formDemo(Content $content)
     {
-        // standalone 模式直接返回视图（无 Dcat Admin 包裹）
-        if (request()->get('standalone')) {
-            return view('module_dcatadmin::vue.form-demo');
-        }
-
-        // 正常模式返回带 Dcat Admin 布局的响应
-        return $content
-            ->title('表单组件演示')
-            ->body(view('module_dcatadmin::vue.form-demo'));
+        return $this->vueview($content, 'module_dcatadmin::vue.form-demo', []);
     }
 
     /**
@@ -79,14 +47,6 @@ class VueDashboardController extends AdminController
      */
     public function dataDemo(Content $content)
     {
-        // standalone 模式直接返回视图（无 Dcat Admin 包裹）
-        if (request()->get('standalone')) {
-            return view('module_dcatadmin::vue.data-demo');
-        }
-
-        // 正常模式返回带 Dcat Admin 布局的响应
-        return $content
-            ->title('数据展示演示')
-            ->body(view('module_dcatadmin::vue.data-demo'));
+        return $this->vueview($content, 'module_dcatadmin::vue.data-demo', []);
     }
 }
