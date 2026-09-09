@@ -39,18 +39,8 @@
           <template v-else>
             <div class="field-container">
               <div class="field-input">
-                <!-- 文本域 -->
-                <template v-if="isTextType(col.type)">
-                  <el-input
-                    v-model="form[col.name]"
-                    type="textarea"
-                    :rows="5"
-                    :placeholder="getPlaceholder(col)"
-                  />
-                </template>
-
                 <!-- 枚举类型 -->
-                <template v-else-if="col.type === 'enum' || col.type === 'set'">
+                <template v-if="col.type === 'enum' || col.type === 'set'">
                   <el-select
                     v-model="form[col.name]"
                     :placeholder="getPlaceholder(col)"
@@ -65,43 +55,17 @@
                   </el-select>
                 </template>
 
-                <!-- 布尔类型 -->
-                <template v-else-if="isBooleanType(col)">
-                  <el-switch
-                    v-model="form[col.name]"
-                    active-text="是"
-                    inactive-text="否"
-                  />
-                </template>
-
-                <!-- 数字类型 -->
-                <template v-else-if="isNumberType(col.type)">
-                  <el-input-number
-                    v-model="form[col.name]"
-                    :placeholder="getPlaceholder(col)"
-                    style="width: 100%"
-                  />
-                </template>
-
-                <!-- 默认输入框 -->
+                <!-- 使用 FieldEditor 组件处理其他类型 -->
                 <template v-else>
-                  <el-input
+                  <FieldEditor
                     v-model="form[col.name]"
+                    :field-type="col.type"
+                    :nullable="col.nullable === 'YES'"
+                    :original-value="originalForm[col.name]"
                     :placeholder="getPlaceholder(col)"
-                    clearable
+                    :show-reset="isEdit"
                   />
                 </template>
-              </div>
-
-              <!-- 可空字段的"设为 null"按钮 -->
-              <div v-if="col.nullable === 'YES'" class="field-actions">
-                <el-button
-                  size="small"
-                  :type="form[col.name] === null ? 'warning' : 'default'"
-                  @click="setFieldToNull(col.name)"
-                >
-                  {{ form[col.name] === null ? '已设为 null' : '设为 null' }}
-                </el-button>
               </div>
 
               <!-- 字段信息 -->
@@ -124,6 +88,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Check } from '@element-plus/icons-vue'
 import axios from 'axios'
+import FieldEditor from '../components/FieldEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -149,6 +114,7 @@ const formRef = ref(null)
 
 const columns = ref([])
 const form = reactive({})
+const originalForm = reactive({}) // 存储原始值，用于重置
 const rules = reactive({})
 
 /**
@@ -166,21 +132,13 @@ const loadColumns = async () => {
       // 初始化表单和验证规则
       columns.value.forEach(col => {
         // 初始化表单值
-        if (isBooleanType(col)) {
-          // 布尔类型：转换数字/字符串为布尔值
-          if (col.default !== null && col.default !== undefined) {
-            // 支持多种格式：1/0, true/false, "true"/"false"
-            form[col.name] = col.default === 1 || col.default === true || col.default === '1' || col.default === 'true'
-          } else {
-            // 可空字段默认为 null，否则为 false
-            form[col.name] = col.nullable === 'YES' ? null : false
-          }
-        } else {
-          form[col.name] = col.default || null
-        }
+        form[col.name] = col.default || null
+
+        // 保存原始值
+        originalForm[col.name] = col.default || null
 
         // 设置验证规则（非空字段）
-        if (col.nullable === 'NO' && !col.is_primary_key && col.extra !== 'auto_increment') {
+        if (col.nullable === 'NO' && !col.isPrimaryKey && !col.isAutoIncrement) {
           rules[col.name] = [
             { required: true, message: `${col.name} 不能为空`, trigger: 'blur' }
           ]
@@ -209,19 +167,10 @@ const loadRowData = async () => {
       // 填充表单
       const rowData = response.data.data.data
 
-      // 转换布尔类型的值
       columns.value.forEach(col => {
-        if (isBooleanType(col)) {
-          // 布尔类型：保持 null 或转换为布尔值
-          if (rowData[col.name] === null || rowData[col.name] === undefined) {
-            form[col.name] = null
-          } else {
-            // 支持多种格式：1/0, true/false, "true"/"false"
-            form[col.name] = rowData[col.name] === 1 || rowData[col.name] === true || rowData[col.name] === '1' || rowData[col.name] === 'true'
-          }
-        } else {
-          form[col.name] = rowData[col.name]
-        }
+        form[col.name] = rowData[col.name]
+        // 保存原始值，用于重置
+        originalForm[col.name] = rowData[col.name]
       })
     }
   } catch (error) {
@@ -230,28 +179,6 @@ const loadRowData = async () => {
   } finally {
     loading.value = false
   }
-}
-
-/**
- * 判断是否为布尔类型
- */
-const isBooleanType = (col) => {
-  // 直接判断类型是否为 boolean
-  return col.type === 'boolean'
-}
-
-/**
- * 判断是否为文本类型
- */
-const isTextType = (type) => {
-  return ['text', 'longtext', 'mediumtext', 'blob', 'longblob'].includes(type)
-}
-
-/**
- * 判断是否为数字类型
- */
-const isNumberType = (type) => {
-  return ['int', 'bigint', 'smallint', 'tinyint', 'decimal', 'float', 'double'].includes(type)
 }
 
 /**
@@ -274,13 +201,6 @@ const getPlaceholder = (col) => {
 }
 
 /**
- * 设置字段为 null
- */
-const setFieldToNull = (fieldName) => {
-  form[fieldName] = null
-}
-
-/**
  * 保存数据
  */
 const handleSave = async () => {
@@ -290,11 +210,14 @@ const handleSave = async () => {
     return
   }
 
-  // 准备提交数据，转换布尔值为数字
+  // 准备提交数据
   const submitData = {}
   columns.value.forEach(col => {
-    if (isBooleanType(col)) {
-      // 布尔类型：null 保持 null，true -> 1, false -> 0
+    // 跳过主键和自增字段
+    if (col.isPrimaryKey || col.isAutoIncrement) return
+
+    // 处理布尔类型：转换 true/false 为 1/0
+    if (col.type === 'boolean') {
       if (form[col.name] === null) {
         submitData[col.name] = null
       } else {
@@ -402,13 +325,6 @@ watch(() => [props.connectionId, props.tableName], () => {
 
 .field-input {
   width: 100%;
-}
-
-.field-actions {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .field-info {

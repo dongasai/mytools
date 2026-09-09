@@ -136,68 +136,14 @@
         </el-form-item>
 
         <el-form-item label="值">
-          <!-- 可空字段：支持设置 NULL -->
-          <div class="edit-field-container">
-            <!-- 布尔类型 -->
-            <template v-if="cellEditDialog.colType === 'boolean'">
-              <el-switch
-                v-model="cellEditDialog.newValue"
-                active-text="是"
-                inactive-text="否"
-              />
-            </template>
-
-            <!-- 文本类型 -->
-            <template v-else-if="isTextType(cellEditDialog.colType)">
-              <el-input
-                v-model="cellEditDialog.newValue"
-                type="textarea"
-                :rows="cellEditDialog.fullscreen ? 20 : 5"
-                placeholder="请输入值"
-              />
-            </template>
-
-            <!-- 数字类型 -->
-            <template v-else-if="isNumberType(cellEditDialog.colType)">
-              <el-input-number
-                v-model="cellEditDialog.newValue"
-                style="width: 100%"
-                placeholder="请输入值"
-              />
-            </template>
-
-            <!-- 默认输入框 -->
-            <template v-else>
-              <el-input
-                v-model="cellEditDialog.newValue"
-                :type="cellEditDialog.fullscreen ? 'textarea' : 'text'"
-                :rows="cellEditDialog.fullscreen ? 10 : 1"
-                placeholder="请输入值"
-                clearable
-              />
-            </template>
-
-            <!-- 操作按钮 -->
-            <div class="field-actions">
-              <!-- 可空字段的"设为 null"按钮 -->
-              <el-button
-                v-if="cellEditDialog.nullable"
-                size="small"
-                :type="cellEditDialog.newValue === null ? 'warning' : 'default'"
-                @click="setCellToNull"
-              >
-                {{ cellEditDialog.newValue === null ? '已设为 null' : '设为 null' }}
-              </el-button>
-
-              <!-- 重置按钮 -->
-              <el-button
-                size="small"
-                @click="resetValue"
-              >
-                重置为原值
-              </el-button>
-            </div>
-          </div>
+          <FieldEditor
+            v-model="cellEditDialog.newValue"
+            :field-type="cellEditDialog.colType"
+            :nullable="cellEditDialog.nullable"
+            :original-value="cellEditDialog.oldValue"
+            :large="cellEditDialog.fullscreen"
+            placeholder="请输入值"
+          />
         </el-form-item>
       </el-form>
 
@@ -215,6 +161,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Refresh, Search, FullScreen, Close } from '@element-plus/icons-vue'
 import axios from 'axios'
+import FieldEditor from '../components/FieldEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -451,20 +398,6 @@ const toggleFullscreen = () => {
 }
 
 /**
- * 设置单元格值为 null
- */
-const setCellToNull = () => {
-  cellEditDialog.newValue = null
-}
-
-/**
- * 重置为原始值
- */
-const resetValue = () => {
-  cellEditDialog.newValue = cellEditDialog.oldValue
-}
-
-/**
  * 保存单元格编辑
  */
 const saveCellEdit = async () => {
@@ -636,20 +569,6 @@ const exportData = async () => {
 }
 
 /**
- * 判断是否为文本类型
- */
-const isTextType = (type) => {
-  return ['text', 'longtext', 'mediumtext', 'blob', 'longblob'].includes(type)
-}
-
-/**
- * 判断是否为数字类型
- */
-const isNumberType = (type) => {
-  return ['int', 'bigint', 'smallint', 'tinyint', 'decimal', 'float', 'double'].includes(type)
-}
-
-/**
  * 格式化单元格值
  * @param {any} value - 单元格值
  * @param {string} type - 数据类型
@@ -716,16 +635,6 @@ const formatCellValue = (value, type) => {
 }
 
 /* ==================== 编辑弹窗 ==================== */
-.edit-field-container {
-  width: 100%;
-}
-
-.field-actions {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-}
-
 .dialog-header {
   display: flex;
   justify-content: space-between;
