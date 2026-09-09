@@ -22,6 +22,7 @@ trait RouteServiceProviderTrait
         if (file_exists($adminRouteFile)) {
             Route::middleware(config('admin.route.middleware'))
                 ->prefix(config('admin.route.prefix'))
+                ->name('dcat.admin.')
                 ->group($adminRouteFile);
         }
     }

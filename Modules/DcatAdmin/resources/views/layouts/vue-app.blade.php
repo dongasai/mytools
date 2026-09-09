@@ -1,8 +1,8 @@
-{{-- Vue 应用通用布局 --}}
-{{-- 三种模式自动判断 --}}
+{{-- Vue 应用通用 Layout --}}
+{{-- 自动判断 standalone 参数，决定渲染模式 --}}
 
 @if(request()->get('standalone'))
-    {{-- 模式1：独立页面（iframe 内部），无后台布局 --}}
+    {{-- 独立页面模式（完整 HTML，用于 iframe） --}}
     <!DOCTYPE html>
     <html lang="zh-CN">
     <head>
@@ -10,11 +10,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>@yield('title', 'Vue 页面')</title>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            html, body { height: 100%; overflow: hidden; }
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        </style>
         @stack('styles')
     </head>
     <body>
@@ -23,16 +18,12 @@
     </body>
     </html>
 @else
-    {{-- 模式2和模式3：渲染 iframe 容器 --}}
-    {{-- 模式2：pjax 请求，无后台布局包裹 --}}
-    {{-- 模式3：普通请求，Controller 用 Content 包装器包裹后台布局 --}}
+    {{-- iframe 容器模式 --}}
     <div class="vue-iframe-container">
-        @if(!request()->pjax())
-        {{-- 新标签打开按钮（仅模式3显示）--}}
+        {{-- 新标签打开按钮 --}}
         <a href="{{ url()->current() }}?standalone=1" target="_blank" class="vue-iframe-open-btn" title="在新标签页打开">
             <i class="feather icon-external-link"></i>
         </a>
-        @endif
 
         <iframe
             src="{{ url()->current() }}?standalone=1"
@@ -46,27 +37,18 @@
     .vue-iframe-container {
         position: relative;
         width: 100%;
-        @if(request()->pjax())
-        height: calc(100vh - 100px);
-        @else
         margin: 0 -1.25rem;
         height: calc(100vh - 230px);
-        @endif
         overflow: hidden;
     }
 
     .vue-iframe-container iframe {
         display: block;
         border: none;
-        @if(request()->pjax())
-        width: 100%;
-        @else
         width: calc(100% + 2.5rem);
-        @endif
         height: 100%;
     }
 
-    @if(!request()->pjax())
     .vue-iframe-open-btn {
         position: absolute;
         top: 10px;
@@ -94,6 +76,5 @@
     .vue-iframe-open-btn i {
         font-size: 16px;
     }
-    @endif
     </style>
 @endif
