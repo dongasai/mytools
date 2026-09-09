@@ -40,7 +40,7 @@ class AdminController extends BaseAdminController
      * @param string $message 成功消息
      * @return JsonResponse
      */
-    protected function success($data = null, string $message = '操作成功'): JsonResponse
+    protected function success_json($data = null, string $message = '操作成功'): JsonResponse
     {
         $response = [
             'success' => true,
@@ -62,7 +62,7 @@ class AdminController extends BaseAdminController
      * @param int $code HTTP 状态码
      * @return JsonResponse
      */
-    protected function error(string $message = '操作失败', int $code = 400): JsonResponse
+    protected function error_json(string $message = '操作失败', int $code = 400): JsonResponse
     {
         return response()->json([
             'success' => false,
