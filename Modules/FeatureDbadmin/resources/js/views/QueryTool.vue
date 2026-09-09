@@ -55,6 +55,9 @@
           <el-icon><DocumentChecked /></el-icon>
           保存
         </el-button>
+        <el-tag v-if="currentQueryName" type="success" size="default" style="margin-left: 8px">
+          {{ currentQueryName }}
+        </el-tag>
       </div>
 
       <div class="toolbar-right">
@@ -217,6 +220,9 @@ const selectedSchema = ref('')
 /** 当前打开的查询ID（用于更新而不是创建新记录） */
 const currentQueryId = ref(null)
 
+/** 当前打开的查询名称 */
+const currentQueryName = ref('')
+
 /** 查询结果 */
 const queryResult = reactive({
   executed: false,
@@ -265,6 +271,9 @@ const loadSavedQuery = async (queryId) => {
 
       // 保存当前查询ID（用于更新）
       currentQueryId.value = query.id
+
+      // 保存当前查询名称（用于显示）
+      currentQueryName.value = query.name
 
       // 填充 SQL
       sqlQuery.value = query.sql_query
