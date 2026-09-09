@@ -22,6 +22,7 @@
           :load="loadNode"
           lazy
           @node-click="handleNodeClick"
+          @node-dblclick="handleNodeDblclick"
           class="navigation-tree"
         >
           <template #default="{ node, data }">
@@ -184,8 +185,10 @@ const treeProps = {
   label: 'label',
   children: 'children',
   isLeaf: (data, node) => {
-    // 表节点和 SQL 节点没有子节点
-    return data.type === 'table' || data.type === 'sql'
+    // 表节点没有子节点
+    // SQL 节点可以有保存的查询子节点
+    // 保存的查询节点没有子节点
+    return data.type === 'table' || data.type === 'saved_query' || data.type === 'no_saved_queries'
   }
 }
 
@@ -386,6 +389,11 @@ const loadNode = async (node, resolve) => {
     else if (node.data.type === 'table_folder') {
       const tables = await loadTables(node.data)
       resolve(tables)
+    }
+    // SQL 执行节点：加载保存的 SQL 查询
+    else if (node.data.type === 'sql') {
+      const savedQueries = await loadSavedQueries(node.data)
+      resolve(savedQueries)
     }
     // 其他节点：无子节点
     else {
@@ -611,6 +619,60 @@ const loadTables = async (parentNode) => {
 }
 
 /**
+ * 加载保存的 SQL 查询
+ */
+const loadSavedQueries = async (parentNode) => {
+  try {
+    const params = {
+      connection_id: parentNode.connectionId
+    }
+
+    // 添加数据库和模式参数
+    if (parentNode.database) {
+      params.database = parentNode.database
+    }
+    if (parentNode.schema) {
+      params.schema = parentNode.schema
+    }
+
+    const response = await axios.get('/admin/featuredbadmin/query/saved', {
+      params: params
+    })
+
+    if (response.data.success && response.data.data) {
+      const queries = response.data.data
+
+      // 如果没有保存的查询，返回提示节点
+      if (queries.length === 0) {
+        return [{
+          id: `no-saved-queries-${parentNode.connectionId}`,
+          label: '（暂无保存的查询）',
+          type: 'no_saved_queries',
+          isLeaf: true
+        }]
+      }
+
+      // 返回保存的查询节点
+      return queries.map(query => ({
+        id: `saved-query-${query.id}`,
+        label: query.name,
+        type: 'saved_query',
+        connectionId: parentNode.connectionId,
+        database: query.database || parentNode.database || null,
+        schema: query.schema || parentNode.schema || null,
+        sql: query.sql,
+        queryId: query.id,
+        isLeaf: true
+      }))
+    }
+    return []
+  } catch (error) {
+    console.error('加载保存的查询失败:', error)
+    return []
+  }
+}
+
+/**
  * 刷新连接（重新加载子节点）
  */
 const refreshConnection = async (data, node) => {
@@ -625,12 +687,15 @@ const refreshConnection = async (data, node) => {
 // ==================== 节点点击处理 ====================
 
 /**
- * 处理节点点击
+ * 处理节点单击
  */
 const handleNodeClick = (data, node) => {
-  // SQL 执行节点：打开 SQL 编辑器
-  if (data.type === 'sql') {
-    openQueryTool(data)
+  // SQL 执行节点：单击不做任何操作（让节点展开）
+  // 双击才打开新编辑器
+
+  // 保存的查询节点：打开 SQL 编辑器并加载查询
+  if (data.type === 'saved_query') {
+    openSavedQuery(data)
   }
   // 表节点：打开数据浏览
   else if (data.type === 'table') {
@@ -639,6 +704,16 @@ const handleNodeClick = (data, node) => {
   // 表文件夹节点：打开表列表
   else if (data.type === 'table_folder') {
     openTableList(data)
+  }
+}
+
+/**
+ * 处理节点双击
+ */
+const handleNodeDblclick = (data, node) => {
+  // SQL 执行节点：双击打开新 SQL 编辑器
+  if (data.type === 'sql') {
+    openQueryTool(data)
   }
 }
 
@@ -661,6 +736,32 @@ const openQueryTool = (data) => {
     openTabs.value.push({
       path: path,
       title: `${connectionName} - SQL编辑器`,
+      icon: 'Search',
+      closable: true
+    })
+  }
+
+  router.push({ path, query })
+}
+
+/**
+ * 打开保存的查询 Tab
+ */
+const openSavedQuery = (data) => {
+  const connectionName = connectionNames.value[data.connectionId] || `连接${data.connectionId}`
+  const path = `/query/${data.connectionId}`
+
+  // 构建查询参数
+  const query = {}
+  if (data.database) query.database = data.database
+  if (data.schema) query.schema = data.schema
+  if (data.queryId) query.queryId = data.queryId
+
+  const existingTab = openTabs.value.find(tab => tab.path === path)
+  if (!existingTab) {
+    openTabs.value.push({
+      path: path,
+      title: `${connectionName} - ${data.label}`,
       icon: 'Search',
       closable: true
     })

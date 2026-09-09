@@ -49,5 +49,7 @@ Route::group([
     Route::post('query/execute', [Controllers\QueryToolController::class, 'execute']);
     Route::get('query/history', [Controllers\QueryToolController::class, 'history']);
     Route::get('query/saved', [Controllers\QueryToolController::class, 'saved']);
+    Route::get('query/saved/{id}', [Controllers\QueryToolController::class, 'detail']);
+    Route::put('query/saved/{id}', [Controllers\QueryToolController::class, 'update']);
     Route::post('query/save', [Controllers\QueryToolController::class, 'save']);
 });

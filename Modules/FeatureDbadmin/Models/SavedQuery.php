@@ -15,7 +15,10 @@ use Modules\DcatAdmin\Models\Administrator;
  * @property int $user_id 用户ID
  * @property string $name 查询名称
  * @property string|null $description 描述
+ * @property int $connection_id 连接ID
  * @property string $connection_name 连接名称
+ * @property string|null $database 数据库名
+ * @property string|null $schema 模式名
  * @property string $sql_query SQL查询语句
  * @property array|null $tags 标签
  * @property bool $is_public 是否公开
@@ -42,7 +45,10 @@ class SavedQuery extends Model
         'user_id',
         'name',
         'description',
+        'connection_id',
         'connection_name',
+        'database',
+        'schema',
         'sql_query',
         'tags',
         'is_public',

@@ -98,16 +98,25 @@ class QueryService
         $status = QueryStatus::SUCCESS;
         $errorMessage = null;
 
-        // 根据查询类型执行
-        if ($queryType === QueryType::SELECT) {
-            $data = DB::connection($connectionName)->select($sql);
-            $rowCount = count($data);
-            if (!empty($data)) {
-                $columns = array_keys((array) $data[0]);
+        try {
+            // 根据查询类型执行
+            if ($queryType === QueryType::SELECT) {
+                $data = DB::connection($connectionName)->select($sql);
+                $rowCount = count($data);
+                if (!empty($data)) {
+                    $columns = array_keys((array) $data[0]);
+                }
+            } else {
+                $affected = DB::connection($connectionName)->statement($sql);
+                $rowCount = $affected ? 1 : 0;
             }
-        } else {
-            $affected = DB::connection($connectionName)->statement($sql);
-            $rowCount = $affected ? 1 : 0;
+        } catch (\Exception $e) {
+            // 捕获 SQL 执行错误
+            $status = QueryStatus::FAILED;
+            $errorMessage = $e->getMessage();
+            $data = [];
+            $rowCount = 0;
+            $columns = [];
         }
 
         // 计算执行时间（毫秒）
@@ -124,6 +133,18 @@ class QueryService
             status: $status,
             errorMessage: $errorMessage
         );
+
+        // 返回结果
+        if ($status === QueryStatus::FAILED) {
+            return new QueryResultDto(
+                success: false,
+                message: 'SQL 执行失败: ' . $errorMessage,
+                data: [],
+                rowCount: 0,
+                executionTime: $executionTime,
+                columns: []
+            );
+        }
 
         return new QueryResultDto(
             success: true,

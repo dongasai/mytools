@@ -41,7 +41,7 @@
 
         <el-button type="primary" @click="executeQuery" :loading="executing">
           <el-icon><VideoPlay /></el-icon>
-          执行 (Ctrl+Enter)
+          {{ hasSelection ? '执行选中 (Ctrl+Enter)' : '执行 (Ctrl+Enter)' }}
         </el-button>
         <el-button @click="clearEditor">
           <el-icon><Delete /></el-icon>
@@ -79,6 +79,7 @@
           :theme="darkTheme ? 'vs-dark' : 'vs'"
           :minimap="false"
           @save="executeQuery"
+          @selectionChange="handleSelectionChange"
         />
 
         <!-- 快捷语句栏 -->
@@ -107,6 +108,9 @@
             <el-tag :type="queryResult.success ? 'success' : 'danger'" size="small">
               {{ queryResult.success ? '成功' : '失败' }}
             </el-tag>
+            <span v-if="queryResult.sql" class="result-sql">
+              SQL: <code>{{ queryResult.sql }}</code>
+            </span>
             <span v-if="queryResult.success" class="result-stats">
               执行: {{ queryResult.executionTime }}ms | 行数: {{ queryResult.rowCount }}
             </span>
@@ -192,6 +196,9 @@ const sqlQuery = ref('')
 /** 执行状态 */
 const executing = ref(false)
 
+/** 是否有选中文本 */
+const hasSelection = ref(false)
+
 /** 编辑器主题 */
 const darkTheme = ref(false)
 
@@ -207,10 +214,14 @@ const schemas = ref([])
 /** 当前选中的模式 */
 const selectedSchema = ref('')
 
+/** 当前打开的查询ID（用于更新而不是创建新记录） */
+const currentQueryId = ref(null)
+
 /** 查询结果 */
 const queryResult = reactive({
   executed: false,
   success: false,
+  sql: '',
   columns: [],
   rows: [],
   rowCount: 0,
@@ -229,11 +240,50 @@ onMounted(() => {
     selectedSchema.value = route.query.schema
   }
 
+  // 如果有查询 ID，加载保存的查询
+  if (route.query.queryId) {
+    loadSavedQuery(route.query.queryId)
+  }
+
   // 加载数据库列表
   loadDatabases()
 })
 
 // ==================== 数据加载 ====================
+
+/**
+ * 加载保存的查询
+ */
+const loadSavedQuery = async (queryId) => {
+  try {
+    const response = await axios.get(`/admin/featuredbadmin/query/saved/${queryId}`, {
+      params: { connection_id: props.connectionId }
+    })
+
+    if (response.data.success && response.data.data) {
+      const query = response.data.data
+
+      // 保存当前查询ID（用于更新）
+      currentQueryId.value = query.id
+
+      // 填充 SQL
+      sqlQuery.value = query.sql_query
+
+      // 填充数据库和模式（如果 URL 参数中没有指定）
+      if (!route.query.database && query.database) {
+        selectedDatabase.value = query.database
+      }
+      if (!route.query.schema && query.schema) {
+        selectedSchema.value = query.schema
+      }
+
+      ElMessage.success('已加载保存的查询')
+    }
+  } catch (error) {
+    console.error('加载保存的查询失败:', error)
+    ElMessage.error('加载保存的查询失败')
+  }
+}
 
 /**
  * 加载数据库列表
@@ -304,13 +354,23 @@ const handleSchemaChange = () => {
   // 模式变化时可以触发一些操作
 }
 
+/**
+ * 处理编辑器选择变化
+ */
+const handleSelectionChange = (selectedText) => {
+  hasSelection.value = selectedText && selectedText.trim().length > 0
+}
+
 // ==================== SQL 操作 ====================
 
 /**
- * 执行查询
+ * 执行查询（自动判断是否选中）
  */
 const executeQuery = async () => {
-  const sql = sqlQuery.value.trim()
+  // 检查是否有选中的 SQL
+  const selectedSql = monacoEditor.value?.getSelection()?.trim()
+  const sql = selectedSql || sqlQuery.value.trim()
+
   if (!sql) {
     ElMessage.warning('请输入 SQL 语句')
     return
@@ -337,10 +397,11 @@ const executeQuery = async () => {
     if (response.data.success) {
       queryResult.executed = true
       queryResult.success = true
-      queryResult.columns = response.data.data.columns || []
-      queryResult.rows = response.data.data.rows || []
-      queryResult.rowCount = response.data.data.rowCount || 0
-      queryResult.executionTime = response.data.data.executionTime || 0
+      queryResult.sql = response.data.sql || ''
+      queryResult.columns = response.data.columns || []
+      queryResult.rows = response.data.data || []
+      queryResult.rowCount = response.data.row_count || 0
+      queryResult.executionTime = response.data.execution_time || 0
       queryResult.error = ''
 
       ElMessage.success('查询执行成功')
@@ -351,6 +412,7 @@ const executeQuery = async () => {
     console.error('查询执行失败:', error)
     queryResult.executed = true
     queryResult.success = false
+    queryResult.sql = response?.data?.sql || ''
     queryResult.error = error.response?.data?.message || error.message || '查询执行失败'
     queryResult.columns = []
     queryResult.rows = []
@@ -394,23 +456,40 @@ const saveQuery = async () => {
   }
 
   try {
-    const { value: name } = await ElMessageBox.prompt('请输入查询名称', '保存查询', {
-      confirmButtonText: '保存',
-      cancelButtonText: '取消',
-      inputPattern: /\S+/,
-      inputErrorMessage: '查询名称不能为空'
-    })
+    // 如果有当前查询ID，直接更新，不要求输入名字
+    if (currentQueryId.value) {
+      const response = await axios.put(`/admin/featuredbadmin/query/saved/${currentQueryId.value}`, {
+        connection_id: props.connectionId,
+        sql: sql,
+        database: selectedDatabase.value,
+        schema: selectedSchema.value || null
+      })
 
-    const response = await axios.post('/admin/featuredbadmin/query/save', {
-      connection_id: props.connectionId,
-      name: name,
-      sql: sql,
-      database: selectedDatabase.value,
-      schema: selectedSchema.value || null
-    })
+      if (response.data.success) {
+        ElMessage.success('查询更新成功')
+      }
+    } else {
+      // 没有查询ID，创建新查询，需要输入名字
+      const { value: name } = await ElMessageBox.prompt('请输入查询名称', '保存查询', {
+        confirmButtonText: '保存',
+        cancelButtonText: '取消',
+        inputPattern: /\S+/,
+        inputErrorMessage: '查询名称不能为空'
+      })
 
-    if (response.data.success) {
-      ElMessage.success('查询保存成功')
+      const response = await axios.post('/admin/featuredbadmin/query/save', {
+        connection_id: props.connectionId,
+        name: name,
+        sql: sql,
+        database: selectedDatabase.value,
+        schema: selectedSchema.value || null
+      })
+
+      if (response.data.success) {
+        // 保存成功后，保存查询ID
+        currentQueryId.value = response.data.data.id
+        ElMessage.success('查询保存成功')
+      }
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -575,6 +654,29 @@ const toggleTheme = () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.result-sql {
+  font-size: 13px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.result-sql code {
+  background: #f5f5f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  color: #1890ff;
+  max-width: 600px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .result-stats {

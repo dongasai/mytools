@@ -81,7 +81,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'change', 'save'])
+const emit = defineEmits(['update:modelValue', 'change', 'save', 'selectionChange'])
 
 const editorContainer = ref(null)
 let editorInstance = null
@@ -144,6 +144,13 @@ const initEditor = () => {
     const value = editorInstance.getValue()
     emit('update:modelValue', value)
     emit('change', value)
+  })
+
+  // 监听选择变化
+  editorInstance.onDidChangeCursorSelection(() => {
+    const selection = editorInstance.getSelection()
+    const selectedText = selection ? editorInstance.getModel().getValueInRange(selection) : ''
+    emit('selectionChange', selectedText)
   })
 
   // 注册 SQL 自动补全
@@ -293,6 +300,19 @@ const getValue = () => {
 }
 
 /**
+ * 获取选中的文本
+ */
+const getSelection = () => {
+  if (!editorInstance) return ''
+
+  const selection = editorInstance.getSelection()
+  if (!selection) return ''
+
+  const selectedText = editorInstance.getModel().getValueInRange(selection)
+  return selectedText || ''
+}
+
+/**
  * 设置编辑器内容
  */
 const setValue = (value) => {
@@ -370,6 +390,7 @@ watch(() => props.theme, (newTheme) => {
 
 defineExpose({
   getValue,
+  getSelection,
   setValue,
   clear,
   formatDocument,
