@@ -107,9 +107,9 @@
         >
           <el-tab-pane
             v-for="tab in openTabs"
-            :key="tab.path"
+            :key="tab.tabId || tab.path"
             :label="tab.title"
-            :name="tab.path"
+            :name="tab.tabId || tab.path"
           >
             <template #label>
               <span class="tab-label">
@@ -731,15 +731,19 @@ const openQueryTool = (data) => {
   if (data.database) query.database = data.database
   if (data.schema) query.schema = data.schema
 
-  const existingTab = openTabs.value.find(tab => tab.path === path)
-  if (!existingTab) {
-    openTabs.value.push({
-      path: path,
-      title: `${connectionName} - SQL编辑器`,
-      icon: 'Search',
-      closable: true
-    })
-  }
+  // 为新的 SQL 编辑器生成唯一标识（基于时间戳）
+  const tabId = `${path}?new=${Date.now()}`
+
+  openTabs.value.push({
+    tabId: tabId,  // 唯一标识（每次都是新的）
+    path: path,
+    title: `${connectionName} - SQL编辑器`,
+    icon: 'Search',
+    closable: true
+  })
+
+  // 激活新标签
+  activeTab.value = tabId
 
   router.push({ path, query })
 }
@@ -757,15 +761,31 @@ const openSavedQuery = (data) => {
   if (data.schema) query.schema = data.schema
   if (data.queryId) query.queryId = data.queryId
 
-  const existingTab = openTabs.value.find(tab => tab.path === path)
+  // 为每个保存的查询创建独立的标签（基于 queryId）
+  const tabId = data.queryId ? `${path}?queryId=${data.queryId}` : path
+
+  const existingTab = openTabs.value.find(tab => {
+    // 对于有 queryId 的查询，需要同时匹配路径和 queryId
+    if (data.queryId) {
+      return tab.tabId === tabId
+    }
+    // 否则只匹配路径
+    return tab.path === path
+  })
+
   if (!existingTab) {
     openTabs.value.push({
+      tabId: tabId,  // 唯一标识（包含 queryId）
       path: path,
       title: `${connectionName} - ${data.label}`,
       icon: 'Search',
-      closable: true
+      closable: true,
+      queryId: data.queryId  // 保存 queryId 用于标识
     })
   }
+
+  // 激活对应的标签
+  activeTab.value = tabId
 
   router.push({ path, query })
 }
@@ -824,25 +844,41 @@ const openTableData = (data) => {
  * Tab 点击切换
  */
 const handleTabClick = (tab) => {
-  const path = tab.paneName
-  if (path && route.path !== path) {
-    router.push(path)
+  const tabId = tab.paneName
+  const targetTab = openTabs.value.find(t => (t.tabId || t.path) === tabId)
+
+  if (targetTab && route.path !== targetTab.path) {
+    // 构建查询参数
+    const query = {}
+    if (targetTab.queryId) query.queryId = targetTab.queryId
+    if (targetTab.database) query.database = targetTab.database
+    if (targetTab.schema) query.schema = targetTab.schema
+
+    router.push({ path: targetTab.path, query })
   }
 }
 
 /**
  * 关闭 Tab
  */
-const closeTab = (path) => {
-  const index = openTabs.value.findIndex(tab => tab.path === path)
+const closeTab = (tabId) => {
+  const index = openTabs.value.findIndex(tab => (tab.tabId || tab.path) === tabId)
   if (index > -1 && openTabs.value[index].closable) {
     openTabs.value.splice(index, 1)
 
     // 如果关闭的是当前 Tab，切换到前一个
-    if (activeTab.value === path && openTabs.value.length > 0) {
+    if (activeTab.value === tabId && openTabs.value.length > 0) {
       const newIndex = Math.min(index, openTabs.value.length - 1)
-      const newPath = openTabs.value[newIndex].path
-      router.push(newPath)
+      const newTab = openTabs.value[newIndex]
+      activeTab.value = newTab.tabId || newTab.path
+
+      // 构建查询参数
+      const query = {}
+      if (newTab.queryId) query.queryId = newTab.queryId
+      if (newTab.database) query.database = newTab.database
+      if (newTab.schema) query.schema = newTab.schema
+
+      router.push({ path: newTab.path, query })
     }
   }
 }
