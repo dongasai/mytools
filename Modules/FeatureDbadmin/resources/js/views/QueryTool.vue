@@ -3,6 +3,42 @@
     <!-- 顶部工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
+        <!-- 数据库和模式选择器 -->
+        <div class="selector-group">
+          <el-select
+            v-model="selectedDatabase"
+            placeholder="选择数据库"
+            size="default"
+            @change="handleDatabaseChange"
+            style="width: 180px"
+          >
+            <el-option
+              v-for="db in databases"
+              :key="db.name"
+              :label="db.name"
+              :value="db.name"
+            />
+          </el-select>
+
+          <el-select
+            v-model="selectedSchema"
+            placeholder="选择模式"
+            size="default"
+            @change="handleSchemaChange"
+            style="width: 180px"
+            :disabled="!selectedDatabase"
+          >
+            <el-option
+              v-for="schema in schemas"
+              :key="schema.name"
+              :label="schema.name"
+              :value="schema.name"
+            />
+          </el-select>
+        </div>
+
+        <el-divider direction="vertical" />
+
         <el-button type="primary" @click="executeQuery" :loading="executing">
           <el-icon><VideoPlay /></el-icon>
           执行 (Ctrl+Enter)
@@ -20,14 +56,30 @@
           保存
         </el-button>
       </div>
+
+      <div class="toolbar-right">
+        <el-switch
+          v-model="darkTheme"
+          @change="toggleTheme"
+          active-text="深色"
+          inactive-text="浅色"
+        />
+      </div>
     </div>
 
     <!-- 主内容区 -->
     <div class="main-content">
       <!-- SQL编辑器区域 -->
       <div class="editor-section">
-        <!-- Monaco Editor 容器 -->
-        <div ref="editorContainer" class="monaco-container"></div>
+        <!-- Monaco Editor -->
+        <MonacoEditor
+          ref="monacoEditor"
+          v-model="sqlQuery"
+          language="sql"
+          :theme="darkTheme ? 'vs-dark' : 'vs'"
+          :minimap="false"
+          @save="executeQuery"
+        />
 
         <!-- 快捷语句栏 -->
         <div class="quick-actions">
@@ -108,9 +160,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   VideoPlay,
   Delete,
@@ -118,6 +170,7 @@ import {
   DocumentChecked
 } from '@element-plus/icons-vue'
 import axios from 'axios'
+import MonacoEditor from '../components/MonacoEditor.vue'
 
 const route = useRoute()
 
@@ -130,12 +183,29 @@ const props = defineProps({
 
 // ==================== 状态定义 ====================
 
-/** Monaco Editor 实例 */
-const editorContainer = ref(null)
-let editorInstance = null
+/** Monaco Editor 引用 */
+const monacoEditor = ref(null)
+
+/** SQL 查询语句 */
+const sqlQuery = ref('')
 
 /** 执行状态 */
 const executing = ref(false)
+
+/** 编辑器主题 */
+const darkTheme = ref(false)
+
+/** 数据库列表 */
+const databases = ref([])
+
+/** 当前选中的数据库 */
+const selectedDatabase = ref('')
+
+/** 模式列表 */
+const schemas = ref([])
+
+/** 当前选中的模式 */
+const selectedSchema = ref('')
 
 /** 查询结果 */
 const queryResult = reactive({
@@ -148,45 +218,91 @@ const queryResult = reactive({
   error: ''
 })
 
-// ==================== 生命周期 ====================
+// ==================== 初始化 ====================
 
 onMounted(() => {
-  // 初始化 Monaco Editor
-  // 注意：实际项目中需要引入 Monaco Editor
-  // import * as monaco from 'monaco-editor'
-
-  // 这里使用简化的 textarea 代替
-  const textarea = document.createElement('textarea')
-  textarea.style.cssText = `
-    width: 100%;
-    height: 100%;
-    border: none;
-    outline: none;
-    resize: none;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    padding: 12px;
-  `
-  textarea.placeholder = '输入 SQL 查询语句...\n\n快捷键: Ctrl+Enter 执行查询'
-
-  editorContainer.value.appendChild(textarea)
-  editorInstance = textarea
-
-  // 添加快捷键监听
-  textarea.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'Enter') {
-      e.preventDefault()
-      executeQuery()
-    }
-  })
-})
-
-onBeforeUnmount(() => {
-  if (editorInstance) {
-    editorInstance.remove()
+  // 从 URL 参数恢复数据库和模式
+  if (route.query.database) {
+    selectedDatabase.value = route.query.database
   }
+  if (route.query.schema) {
+    selectedSchema.value = route.query.schema
+  }
+
+  // 加载数据库列表
+  loadDatabases()
 })
+
+// ==================== 数据加载 ====================
+
+/**
+ * 加载数据库列表
+ */
+const loadDatabases = async () => {
+  try {
+    const response = await axios.get('/admin/featuredbadmin/databases', {
+      params: { connection_id: props.connectionId }
+    })
+
+    if (response.data.success && response.data.data) {
+      databases.value = response.data.data.databases || []
+
+      // 如果只有一个数据库，自动选中
+      if (databases.value.length === 1) {
+        selectedDatabase.value = databases.value[0].name
+        loadSchemas()
+      }
+    }
+  } catch (error) {
+    console.error('加载数据库列表失败:', error)
+  }
+}
+
+/**
+ * 加载模式列表
+ */
+const loadSchemas = async () => {
+  if (!selectedDatabase.value) {
+    schemas.value = []
+    return
+  }
+
+  try {
+    const response = await axios.get('/admin/featuredbadmin/schemas', {
+      params: {
+        connection_id: props.connectionId,
+        database: selectedDatabase.value
+      }
+    })
+
+    if (response.data.success && response.data.data) {
+      schemas.value = response.data.data.schemas || []
+
+      // 如果只有一个模式，自动选中
+      if (schemas.value.length === 1) {
+        selectedSchema.value = schemas.value[0].name
+      }
+    }
+  } catch (error) {
+    console.error('加载模式列表失败:', error)
+  }
+}
+
+/**
+ * 处理数据库变化
+ */
+const handleDatabaseChange = () => {
+  selectedSchema.value = ''
+  schemas.value = []
+  loadSchemas()
+}
+
+/**
+ * 处理模式变化
+ */
+const handleSchemaChange = () => {
+  // 模式变化时可以触发一些操作
+}
 
 // ==================== SQL 操作 ====================
 
@@ -194,49 +310,53 @@ onBeforeUnmount(() => {
  * 执行查询
  */
 const executeQuery = async () => {
-  const sql = editorInstance?.value?.trim()
+  const sql = sqlQuery.value.trim()
   if (!sql) {
     ElMessage.warning('请输入 SQL 语句')
     return
   }
 
+  if (!selectedDatabase.value) {
+    ElMessage.warning('请选择数据库')
+    return
+  }
+
   executing.value = true
-  const startTime = Date.now()
+  queryResult.executed = false
 
   try {
-    const payload = {
+    const params = {
       connection_id: props.connectionId,
-      sql: sql
+      sql: sql,
+      database: selectedDatabase.value,
+      schema: selectedSchema.value || null
     }
 
-    // 从查询参数中读取 database 和 schema
-    if (route.query.database) payload.database = route.query.database
-    if (route.query.schema) payload.schema = route.query.schema
-
-    const response = await axios.post('/admin/featuredbadmin/query/execute', payload)
-
-    const endTime = Date.now()
-
-    queryResult.executed = true
-    queryResult.success = response.data.success
-    queryResult.executionTime = endTime - startTime
-    queryResult.error = response.data.error || ''
+    const response = await axios.post('/admin/featuredbadmin/query/execute', params)
 
     if (response.data.success) {
-      queryResult.columns = response.data.columns || []
-      queryResult.rows = response.data.rows || []
-      queryResult.rowCount = response.data.rows?.length || 0
+      queryResult.executed = true
+      queryResult.success = true
+      queryResult.columns = response.data.data.columns || []
+      queryResult.rows = response.data.data.rows || []
+      queryResult.rowCount = response.data.data.rowCount || 0
+      queryResult.executionTime = response.data.data.executionTime || 0
+      queryResult.error = ''
+
+      ElMessage.success('查询执行成功')
     } else {
-      queryResult.columns = []
-      queryResult.rows = []
-      queryResult.rowCount = 0
+      throw new Error(response.data.message || '查询执行失败')
     }
   } catch (error) {
-    console.error('执行失败:', error)
+    console.error('查询执行失败:', error)
     queryResult.executed = true
     queryResult.success = false
-    queryResult.error = error.response?.data?.message || error.message || '执行失败'
-    queryResult.executionTime = Date.now() - startTime
+    queryResult.error = error.response?.data?.message || error.message || '查询执行失败'
+    queryResult.columns = []
+    queryResult.rows = []
+    queryResult.rowCount = 0
+    queryResult.executionTime = 0
+    ElMessage.error('查询执行失败')
   } finally {
     executing.value = false
   }
@@ -246,9 +366,7 @@ const executeQuery = async () => {
  * 清空编辑器
  */
 const clearEditor = () => {
-  if (editorInstance) {
-    editorInstance.value = ''
-  }
+  sqlQuery.value = ''
   queryResult.executed = false
 }
 
@@ -256,34 +374,49 @@ const clearEditor = () => {
  * 格式化 SQL
  */
 const formatSql = () => {
-  ElMessage.info('SQL 格式化功能需要集成格式化库')
+  monacoEditor.value?.formatDocument()
+  ElMessage.success('SQL 已格式化')
 }
 
 /**
  * 保存查询
  */
 const saveQuery = async () => {
-  const sql = editorInstance?.value?.trim()
+  const sql = sqlQuery.value.trim()
   if (!sql) {
     ElMessage.warning('请输入 SQL 语句')
     return
   }
 
+  if (!selectedDatabase.value) {
+    ElMessage.warning('请选择数据库')
+    return
+  }
+
   try {
+    const { value: name } = await ElMessageBox.prompt('请输入查询名称', '保存查询', {
+      confirmButtonText: '保存',
+      cancelButtonText: '取消',
+      inputPattern: /\S+/,
+      inputErrorMessage: '查询名称不能为空'
+    })
+
     const response = await axios.post('/admin/featuredbadmin/query/save', {
       connection_id: props.connectionId,
+      name: name,
       sql: sql,
-      name: `查询 ${new Date().toLocaleString()}`
+      database: selectedDatabase.value,
+      schema: selectedSchema.value || null
     })
 
     if (response.data.success) {
-      ElMessage.success('查询已保存')
-    } else {
-      ElMessage.error('保存失败')
+      ElMessage.success('查询保存成功')
     }
   } catch (error) {
-    console.error('保存失败:', error)
-    ElMessage.error('保存失败')
+    if (error !== 'cancel') {
+      console.error('保存查询失败:', error)
+      ElMessage.error('保存查询失败')
+    }
   }
 }
 
@@ -291,43 +424,61 @@ const saveQuery = async () => {
  * 插入 SQL 模板
  */
 const insertSql = (sql) => {
-  if (editorInstance) {
-    const cursorPos = editorInstance.selectionStart
-    const textBefore = editorInstance.value.substring(0, cursorPos)
-    const textAfter = editorInstance.value.substring(cursorPos)
-    editorInstance.value = textBefore + sql + textAfter
-    editorInstance.focus()
-  }
+  monacoEditor.value?.insertText(sql)
+  monacoEditor.value?.focus()
 }
 
 /**
- * 导出结果
+ * 导出查询结果
  */
 const exportResult = (format) => {
-  let content = ''
-  let filename = `query-result.${format}`
-
-  if (format === 'csv') {
-    const headers = queryResult.columns.join(',')
-    const rows = queryResult.rows.map(row =>
-      queryResult.columns.map(col => row[col]).join(',')
-    )
-    content = [headers, ...rows].join('\n')
-  } else if (format === 'json') {
-    content = JSON.stringify(queryResult.rows, null, 2)
+  if (!queryResult.rows || queryResult.rows.length === 0) {
+    ElMessage.warning('无数据可导出')
+    return
   }
 
-  const blob = new Blob([content], { type: 'text/plain' })
-  const url = window.URL.createObjectURL(blob)
+  let content = ''
+  let filename = `query_result_${Date.now()}`
+
+  if (format === 'csv') {
+    // 导出 CSV
+    const headers = queryResult.columns.join(',')
+    const rows = queryResult.rows.map(row =>
+      queryResult.columns.map(col => {
+        const value = row[col]
+        // 处理包含逗号或引号的值
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+          return `"${value.replace(/"/g, '""')}"`
+        }
+        return value ?? ''
+      }).join(',')
+    ).join('\n')
+
+    content = `${headers}\n${rows}`
+    filename += '.csv'
+  } else if (format === 'json') {
+    // 导出 JSON
+    content = JSON.stringify(queryResult.rows, null, 2)
+    filename += '.json'
+  }
+
+  // 创建下载链接
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = filename
-  document.body.appendChild(link)
   link.click()
-  document.body.removeChild(link)
-  window.URL.revokeObjectURL(url)
+  URL.revokeObjectURL(url)
 
-  ElMessage.success('导出成功')
+  ElMessage.success(`已导出 ${format.toUpperCase()} 文件`)
+}
+
+/**
+ * 切换主题
+ */
+const toggleTheme = () => {
+  monacoEditor.value?.setTheme(darkTheme.value ? 'vs-dark' : 'vs')
 }
 </script>
 
@@ -355,6 +506,18 @@ const exportResult = (format) => {
   gap: 8px;
 }
 
+.selector-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* ==================== 主内容区 ==================== */
 .main-content {
   flex: 1;
@@ -365,7 +528,7 @@ const exportResult = (format) => {
 
 /* ==================== 编辑器区域 ==================== */
 .editor-section {
-  height: 300px;
+  height: 480px;
   border-bottom: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
