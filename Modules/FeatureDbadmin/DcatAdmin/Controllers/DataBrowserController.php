@@ -4,7 +4,7 @@ namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
 
 use Dcat\Admin\Layout\Content;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Modules\DcatAdmin\DcatAdmin\AdminController;
 use Modules\FeatureDbadmin\Models\Connection;
 use Modules\FeatureDbadmin\Services\DataBrowserService;
 use Modules\FeatureDbadmin\Services\ExportService;
@@ -15,7 +15,7 @@ use Modules\FeatureDbadmin\Services\ExportService;
  * 提供表数据浏览、编辑、导出功能
  * HTML页面和JSON API混合控制器
  */
-class DataBrowserController extends Controller
+class DataBrowserController extends AdminController
 {
     /**
      * 数据浏览页
@@ -93,7 +93,7 @@ class DataBrowserController extends Controller
      * @param string $tableName
      * @return \Illuminate\Http\JsonResponse
      */
-    public function create(Request $request, string $tableName)
+    public function insert(Request $request, string $tableName)
     {
         $validated = $request->validate([
             'connection_id' => 'required|integer|min:1',
@@ -128,7 +128,7 @@ class DataBrowserController extends Controller
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $request, string $tableName, int $id)
+    public function modify(Request $request, string $tableName, int $id)
     {
         $validated = $request->validate([
             'connection_id' => 'required|integer|min:1',

@@ -4,7 +4,7 @@ namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
 
 use Dcat\Admin\Layout\Content;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Modules\DcatAdmin\DcatAdmin\AdminController;
 use Modules\FeatureDbadmin\Models\Connection;
 use Modules\FeatureDbadmin\Models\QueryHistory;
 use Modules\FeatureDbadmin\Models\SavedQuery;
@@ -16,7 +16,7 @@ use Modules\FeatureDbadmin\Services\QueryService;
  * 提供SQL执行、历史记录、保存查询功能
  * HTML页面和JSON API混合控制器
  */
-class QueryToolController extends Controller
+class QueryToolController extends AdminController
 {
     /**
      * SQL查询工具页

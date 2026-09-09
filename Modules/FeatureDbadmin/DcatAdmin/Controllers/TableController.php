@@ -4,7 +4,7 @@ namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
 
 use Dcat\Admin\Layout\Content;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Modules\DcatAdmin\DcatAdmin\AdminController;
 use Modules\FeatureDbadmin\Models\Connection;
 use Modules\FeatureDbadmin\Services\TableService;
 use Modules\FeatureDbadmin\Services\ExportService;
@@ -15,7 +15,7 @@ use Modules\FeatureDbadmin\Services\ExportService;
  * 提供表结构查看、导出功能
  * HTML页面和JSON API混合控制器
  */
-class TableController extends Controller
+class TableController extends AdminController
 {
     /**
      * 表列表页

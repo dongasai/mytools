@@ -70,6 +70,56 @@ class DatabaseService
     }
 
     /**
+     * 测试连接配置（未保存的配置）
+     *
+     * @param array $config 连接配置
+     * @return array{success: bool, message: string, version: string|null}
+     */
+    public static function testConnectionConfig(array $config): array
+    {
+        try {
+            // 构建临时连接配置
+            $tempConfig = [
+                'driver' => $config['driver'],
+                'host' => $config['host'] ?? '127.0.0.1',
+                'port' => $config['port'] ?? ($config['driver'] === 'mysql' ? 3306 : 5432),
+                'database' => $config['database'],
+                'username' => $config['username'] ?? '',
+                'password' => $config['password'] ?? '',
+                'charset' => $config['charset'] ?? 'utf8mb4',
+            ];
+
+            // 创建临时连接名称
+            $tempConnectionName = 'temp_test_' . uniqid();
+
+            // 动态添加连接配置
+            Config::set("database.connections.{$tempConnectionName}", $tempConfig);
+
+            // 测试连接
+            DB::purge($tempConnectionName);
+            $pdo = DB::connection($tempConnectionName)->getPdo();
+
+            // 获取版本
+            $version = $pdo->getAttribute(\PDO::ATTR_SERVER_VERSION);
+
+            // 清理临时连接
+            DB::purge($tempConnectionName);
+
+            return [
+                'success' => true,
+                'message' => '连接测试成功',
+                'version' => $version,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => '连接测试失败: ' . $e->getMessage(),
+                'version' => null,
+            ];
+        }
+    }
+
+    /**
      * 切换到指定连接
      *
      * 注册动态连接并切换到该连接

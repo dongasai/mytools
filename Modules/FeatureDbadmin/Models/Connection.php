@@ -13,7 +13,7 @@ use Modules\DcatAdmin\Models\Administrator;
  * 数据库连接配置模型
  *
  * @property int $id 连接ID
- * @property int|null $creator_id 创建者ID
+ * @property int|null $created_by 创建者ID
  * @property string $name 连接名称
  * @property string $driver 数据库驱动(mysql/pgsql/sqlite)
  * @property string $host 主机地址
@@ -45,7 +45,7 @@ class Connection extends Model
      * 可填充字段
      */
     protected $fillable = [
-        'creator_id',
+        'created_by',
         'name',
         'driver',
         'host',
@@ -103,7 +103,7 @@ class Connection extends Model
      */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Administrator::class, 'creator_id');
+        return $this->belongsTo(Administrator::class, 'created_by');
     }
 
     // ==================== 业务方法 ====================

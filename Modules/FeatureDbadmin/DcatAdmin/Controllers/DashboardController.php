@@ -2,41 +2,18 @@
 
 namespace Modules\FeatureDbadmin\DcatAdmin\Controllers;
 
-use Dcat\Admin\Layout\Content;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Modules\DcatAdmin\DcatAdmin\AdminController;
 use Modules\FeatureDbadmin\Models\QueryHistory;
 use Modules\FeatureDbadmin\Services\DatabaseService;
 
 /**
- * FeatureDbadmin 仪表盘控制器
+ * FeatureDbadmin 仪表盘 API 控制器
  *
- * 系统概览、统计信息展示
+ * 提供仪表盘统计数据 API
  */
-class DashboardController extends Controller
+class DashboardController extends AdminController
 {
-    /**
-     * 仪表盘首页
-     *
-     * @param Request $request
-     * @param Content $content
-     * @return \Illuminate\View\View|Content
-     */
-    public function index(Request $request, Content $content)
-    {
-        // standalone 或 pjax：直接返回 Vue 视图（vue-app 布局处理）
-        if ($request->get('standalone') || $request->pjax()) {
-            return view('featuredbadmin::vue.dashboard');
-        }
-
-        // 普通请求：用 Content 包装后台布局，body 返回 Vue 视图
-        // Vue 视图会渲染 iframe 容器
-        return $content
-            ->title('数据库管理员工具')
-            ->description('系统概览')
-            ->body(view('featuredbadmin::vue.dashboard'));
-    }
-
     /**
      * 统计数据 JSON 接口
      *
