@@ -9,6 +9,7 @@
     </div>
 
     <el-table :data="connections" border size="small" v-loading="loading">
+      <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="name" label="连接名称" width="180" />
       <el-table-column prop="driver" label="驱动" width="100">
         <template #default="{ row }">
@@ -97,8 +98,8 @@ const loadConnections = async () => {
   loading.value = true
   try {
     const response = await axios.get('/admin/featuredbadmin/connections')
-    if (response.data.data) {
-      connections.value = response.data.data
+    if (response.data.success && response.data.data) {
+      connections.value = response.data.data.data
     }
   } catch (error) {
     console.error('加载失败:', error)

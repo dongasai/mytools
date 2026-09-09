@@ -124,8 +124,8 @@ const loadTables = async () => {
       params: params
     })
 
-    if (response.data.data) {
-      tables.value = response.data.data.map(name => ({
+    if (response.data.success && response.data.data) {
+      tables.value = response.data.data.data.map(name => ({
         name: name,
         rowCount: null,
         size: null
@@ -134,8 +134,8 @@ const loadTables = async () => {
 
     // 加载连接信息
     const connResponse = await axios.get('/admin/featuredbadmin/connections')
-    if (connResponse.data.data) {
-      const conn = connResponse.data.data.find(c => c.id == props.connectionId)
+    if (connResponse.data.success && connResponse.data.data) {
+      const conn = connResponse.data.data.data.find(c => c.id == props.connectionId)
       if (conn) {
         connectionName.value = conn.name
       }

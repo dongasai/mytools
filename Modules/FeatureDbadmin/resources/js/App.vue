@@ -16,11 +16,11 @@
 
       <div class="tree-container">
         <el-tree
-          :data="connectionsTree"
           :props="treeProps"
           node-key="id"
           :expand-on-click-node="false"
-          :default-expand-all="false"
+          :load="loadNode"
+          lazy
           @node-click="handleNodeClick"
           class="navigation-tree"
         >
@@ -29,17 +29,29 @@
               <span class="node-icon">
                 <!-- 连接节点 -->
                 <el-icon v-if="data.type === 'connection'" :class="data.status">
-                  <Database />
+                  <Coin />
+                </el-icon>
+                <!-- 数据库节点 -->
+                <el-icon v-else-if="data.type === 'database'">
+                  <Coin />
+                </el-icon>
+                <!-- 模式节点 -->
+                <el-icon v-else-if="data.type === 'schema'">
+                  <Folder />
+                </el-icon>
+                <!-- SQL 执行节点 -->
+                <el-icon v-else-if="data.type === 'sql'">
+                  <Search />
+                </el-icon>
+                <!-- 表文件夹节点 -->
+                <el-icon v-else-if="data.type === 'table_folder'">
+                  <Folder />
                 </el-icon>
                 <!-- 表节点 -->
                 <el-icon v-else-if="data.type === 'table'">
                   <Grid />
                 </el-icon>
-                <!-- 视图节点 -->
-                <el-icon v-else-if="data.type === 'view'">
-                  <View />
-                </el-icon>
-                <!-- 文件夹节点 -->
+                <!-- 默认 -->
                 <el-icon v-else>
                   <Folder />
                 </el-icon>
@@ -51,18 +63,10 @@
                   <el-button
                     type="text"
                     size="small"
-                    @click.stop="refreshConnection(data)"
+                    @click.stop="refreshConnection(data, node)"
                     title="刷新"
                   >
                     <el-icon><Refresh /></el-icon>
-                  </el-button>
-                  <el-button
-                    type="text"
-                    size="small"
-                    @click.stop="editConnection(data)"
-                    title="编辑"
-                  >
-                    <el-icon><Edit /></el-icon>
                   </el-button>
                 </template>
                 <!-- 表节点操作 -->
@@ -89,7 +93,7 @@
       />
     </div>
 
-    <!-- 右侧：工作区（Tab 页签） -->
+    <!-- 右侧：工作区（Tab 页签 + 路由） -->
     <div class="right-panel">
       <!-- Tab 页签栏 -->
       <div class="tabs-header">
@@ -102,9 +106,9 @@
         >
           <el-tab-pane
             v-for="tab in openTabs"
-            :key="tab.id"
+            :key="tab.path"
             :label="tab.title"
-            :name="tab.id"
+            :name="tab.path"
           >
             <template #label>
               <span class="tab-label">
@@ -118,48 +122,13 @@
         </el-tabs>
       </div>
 
-      <!-- Tab 内容区 -->
+      <!-- Tab 内容区（路由视图） -->
       <div class="tabs-content">
-        <!-- 欢迎页 -->
-        <div v-if="activeTab === 'welcome'" class="welcome-page">
-          <div class="welcome-content">
-            <el-icon :size="80" color="#409eff"><Database /></el-icon>
-            <h2>数据库管理员工具</h2>
-            <p>基于 DBeaver 设计理念</p>
-            <div class="quick-actions">
-              <el-button type="primary" size="large" @click="openAddConnectionDialog">
-                <el-icon><Plus /></el-icon>
-                新建连接
-              </el-button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 数据浏览 Tab -->
-        <div v-else-if="activeTab.startsWith('data-')" class="tab-content">
-          <DataBrowser
-            :connection-id="currentTab.connectionId"
-            :table-name="currentTab.tableName"
-          />
-        </div>
-
-        <!-- SQL 编辑器 Tab -->
-        <div v-else-if="activeTab.startsWith('query-')" class="tab-content">
-          <QueryTool :connection-id="currentTab.connectionId" />
-        </div>
-
-        <!-- 表结构 Tab -->
-        <div v-else-if="activeTab.startsWith('structure-')" class="tab-content">
-          <TableStructure
-            :connection-id="currentTab.connectionId"
-            :table-name="currentTab.tableName"
-          />
-        </div>
-
-        <!-- 连接管理 Tab -->
-        <div v-else-if="activeTab === 'connections'" class="tab-content">
-          <ConnectionManager @refresh="loadConnections" />
-        </div>
+        <router-view v-slot="{ Component, route }">
+          <keep-alive>
+            <component :is="Component" :key="route.fullPath" />
+          </keep-alive>
+        </router-view>
       </div>
     </div>
 
@@ -180,47 +149,53 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   Plus,
-  Database,
+  Coin,
   Grid,
-  View,
   Folder,
   Refresh,
-  Edit,
   DataLine,
+  DataAnalysis,
   Search
 } from '@element-plus/icons-vue'
 import axios from 'axios'
-import DataBrowser from './views/DataBrowser.vue'
-import QueryTool from './views/QueryTool.vue'
-import TableStructure from './views/TableStructure.vue'
-import ConnectionManager from './views/ConnectionManager.vue'
 import ConnectionForm from './components/ConnectionForm.vue'
+
+const route = useRoute()
+const router = useRouter()
 
 // ==================== 状态定义 ====================
 
 /** 左侧面板宽度 */
 const leftPanelWidth = ref(280)
 
-/** 连接树数据 */
-const connectionsTree = ref([])
+/** 连接名称映射 (connectionId => name) */
+const connectionNames = ref({})
+
+/** 连接驱动类型映射 (connectionId => driver) */
+const connectionDrivers = ref({})
 
 /** 树配置 */
 const treeProps = {
   label: 'label',
-  children: 'children'
+  children: 'children',
+  isLeaf: (data, node) => {
+    // 表节点和 SQL 节点没有子节点
+    return data.type === 'table' || data.type === 'sql'
+  }
 }
 
 /** 打开的 Tab 页签 */
 const openTabs = ref([
-  { id: 'welcome', title: '欢迎', icon: 'Database', closable: false }
+  { path: '/', title: '欢迎', icon: 'Coin', closable: false }
 ])
 
 /** 当前激活的 Tab */
-const activeTab = ref('welcome')
+const activeTab = ref('/')
 
 /** 连接对话框 */
 const connectionDialog = reactive({
@@ -236,20 +211,192 @@ const resizing = reactive({
   startWidth: 0
 })
 
-// ==================== 计算属性 ====================
-
-/** 当前 Tab 数据 */
-const currentTab = computed(() => {
-  return openTabs.value.find(tab => tab.id === activeTab.value) || {}
-})
+/** 连接数据缓存（用于刷新时重新加载） */
+const connectionsCache = ref([])
 
 // ==================== 生命周期 ====================
 
 onMounted(() => {
-  loadConnections()
+  // 从 localStorage 加载 Tab
+  loadTabsFromStorage()
+  // 同步当前路由到 Tab
+  syncRouteToTab()
 })
 
-// ==================== 数据加载 ====================
+// 监听路由变化，同步 Tab
+watch(() => route.path, () => {
+  syncRouteToTab()
+})
+
+// 监听 Tab 变化，保存到 localStorage
+watch(openTabs, (newTabs) => {
+  saveTabsToStorage(newTabs)
+}, { deep: true })
+
+// ==================== Tab 持久化 ====================
+
+/**
+ * 保存 Tab 到 localStorage
+ */
+const saveTabsToStorage = (tabs) => {
+  try {
+    const data = {
+      tabs: tabs,
+      activeTab: activeTab.value,
+      connectionNames: connectionNames.value
+    }
+    localStorage.setItem('featuredbadmin-tabs', JSON.stringify(data))
+  } catch (error) {
+    console.error('保存 Tab 失败:', error)
+  }
+}
+
+/**
+ * 从 localStorage 加载 Tab
+ */
+const loadTabsFromStorage = () => {
+  try {
+    const data = localStorage.getItem('featuredbadmin-tabs')
+    if (data) {
+      const parsed = JSON.parse(data)
+
+      // 恢复连接名称映射
+      if (parsed.connectionNames) {
+        connectionNames.value = parsed.connectionNames
+      }
+
+      // 恢复 Tab 列表
+      if (parsed.tabs && Array.isArray(parsed.tabs)) {
+        openTabs.value = parsed.tabs
+      }
+
+      // 恢复激活的 Tab
+      if (parsed.activeTab) {
+        activeTab.value = parsed.activeTab
+      }
+    }
+  } catch (error) {
+    console.error('加载 Tab 失败:', error)
+  }
+}
+
+// ==================== 路由与 Tab 同步 ====================
+
+/**
+ * 同步路由到 Tab
+ */
+const syncRouteToTab = () => {
+  const currentPath = route.path
+
+  // 检查是否已存在该 Tab
+  const existingTab = openTabs.value.find(tab => tab.path === currentPath)
+
+  if (existingTab) {
+    activeTab.value = currentPath
+  } else {
+    // 根据路由路径推断 Tab 标题和图标
+    const tabInfo = inferTabFromPath(currentPath, route.params)
+    if (tabInfo) {
+      openTabs.value.push({
+        path: currentPath,
+        title: tabInfo.title,
+        icon: tabInfo.icon,
+        closable: true
+      })
+      activeTab.value = currentPath
+    }
+  }
+}
+
+/**
+ * 根据路径推断 Tab 信息
+ */
+const inferTabFromPath = (path, params) => {
+  // 提取连接ID
+  const connectionId = params.connectionId
+  const connectionName = connectionId ? (connectionNames.value[connectionId] || `连接${connectionId}`) : ''
+
+  if (path.startsWith('/data/') && path.includes('/edit/')) {
+    return {
+      title: `${connectionName} - ${params.tableName}编辑`,
+      icon: 'DataLine'
+    }
+  }
+  if (path.startsWith('/tables/')) {
+    return {
+      title: `${connectionName} - 表列表`,
+      icon: 'Grid'
+    }
+  }
+  if (path.startsWith('/data/')) {
+    return {
+      title: `${connectionName} - ${params.tableName}`,
+      icon: 'DataLine'
+    }
+  }
+  if (path.startsWith('/query/')) {
+    return {
+      title: `${connectionName} - SQL编辑器`,
+      icon: 'Search'
+    }
+  }
+  if (path.startsWith('/structure/')) {
+    return {
+      title: `${connectionName} - ${params.tableName}结构`,
+      icon: 'Grid'
+    }
+  }
+  if (path === '/connections') {
+    return {
+      title: '连接管理',
+      icon: 'Coin'
+    }
+  }
+  return null
+}
+
+// ==================== 懒加载树结构 ====================
+
+/**
+ * 懒加载节点数据
+ */
+const loadNode = async (node, resolve) => {
+  try {
+    // Level 0: 加载连接列表
+    if (node.level === 0) {
+      const connections = await loadConnections()
+      resolve(connections)
+    }
+    // 连接节点：根据驱动类型加载子节点
+    else if (node.data.type === 'connection') {
+      const children = await loadChildrenForConnection(node.data)
+      resolve(children)
+    }
+    // 数据库节点：加载模式或表
+    else if (node.data.type === 'database') {
+      const children = await loadChildrenForDatabase(node.data)
+      resolve(children)
+    }
+    // 模式节点：加载 SQL + 表
+    else if (node.data.type === 'schema') {
+      const children = await loadChildrenForSchema(node.data)
+      resolve(children)
+    }
+    // 表文件夹节点：加载表列表
+    else if (node.data.type === 'table_folder') {
+      const tables = await loadTables(node.data)
+      resolve(tables)
+    }
+    // 其他节点：无子节点
+    else {
+      resolve([])
+    }
+  } catch (error) {
+    console.error('加载节点失败:', error)
+    ElMessage.error('加载失败: ' + error.message)
+    resolve([])
+  }
+}
 
 /**
  * 加载连接列表
@@ -257,69 +404,222 @@ onMounted(() => {
 const loadConnections = async () => {
   try {
     const response = await axios.get('/admin/featuredbadmin/connections')
-    if (response.data.data) {
-      // 构建树形数据
-      connectionsTree.value = response.data.data.map(conn => ({
+    if (response.data.success && response.data.data) {
+      const connections = response.data.data.data
+
+      // 缓存连接数据
+      connectionsCache.value = connections
+
+      // 填充映射
+      connections.forEach(conn => {
+        connectionNames.value[conn.id] = conn.name
+        connectionDrivers.value[conn.id] = conn.driver
+      })
+
+      return connections.map(conn => ({
         id: `conn-${conn.id}`,
         label: conn.name,
         type: 'connection',
         connectionId: conn.id,
-        status: conn.is_active ? 'active' : 'inactive',
-        children: [
-          {
-            id: `conn-${conn.id}-tables`,
-            label: '表',
-            type: 'folder',
-            connectionId: conn.id,
-            children: [] // 表列表将延迟加载
-          },
-          {
-            id: `conn-${conn.id}-views`,
-            label: '视图',
-            type: 'folder',
-            connectionId: conn.id,
-            children: []
-          }
-        ]
+        driver: conn.driver,
+        status: conn.is_active ? 'active' : 'inactive'
       }))
     }
+    return []
   } catch (error) {
     console.error('加载连接失败:', error)
-    ElMessage.error('加载连接失败')
+    return []
   }
 }
 
 /**
- * 刷新连接（加载表列表）
+ * 为连接节点加载子节点（智能适配）
  */
-const refreshConnection = async (node) => {
+const loadChildrenForConnection = async (connectionNode) => {
+  const driver = connectionNode.driver
+  const connectionId = connectionNode.connectionId
+
+  // SQLite: 直接显示 SQL + 表
+  if (driver === 'sqlite') {
+    return [
+      {
+        id: `conn-${connectionId}-sql`,
+        label: 'SQL 执行',
+        type: 'sql',
+        connectionId: connectionId
+      },
+      {
+        id: `conn-${connectionId}-tables`,
+        label: '表',
+        type: 'table_folder',
+        connectionId: connectionId
+      }
+    ]
+  }
+
+  // MySQL/PostgreSQL: 显示数据库列表
+  const databases = await loadDatabases(connectionId)
+  return databases
+}
+
+/**
+ * 为数据库节点加载子节点（智能适配）
+ */
+const loadChildrenForDatabase = async (databaseNode) => {
+  const driver = connectionDrivers.value[databaseNode.connectionId]
+
+  // PostgreSQL: 显示模式列表
+  if (driver === 'pgsql') {
+    const schemas = await loadSchemas(databaseNode.connectionId, databaseNode.databaseName)
+    return schemas
+  }
+
+  // MySQL: 显示 SQL + 表
+  return [
+    {
+      id: `conn-${databaseNode.connectionId}-db-${databaseNode.databaseName}-sql`,
+      label: 'SQL 执行',
+      type: 'sql',
+      connectionId: databaseNode.connectionId,
+      database: databaseNode.databaseName
+    },
+    {
+      id: `conn-${databaseNode.connectionId}-db-${databaseNode.databaseName}-tables`,
+      label: '表',
+      type: 'table_folder',
+      connectionId: databaseNode.connectionId,
+      database: databaseNode.databaseName
+    }
+  ]
+}
+
+/**
+ * 为模式节点加载子节点
+ */
+const loadChildrenForSchema = async (schemaNode) => {
+  return [
+    {
+      id: `conn-${schemaNode.connectionId}-db-${schemaNode.database}-schema-${schemaNode.schemaName}-sql`,
+      label: 'SQL 执行',
+      type: 'sql',
+      connectionId: schemaNode.connectionId,
+      database: schemaNode.database,
+      schema: schemaNode.schemaName
+    },
+    {
+      id: `conn-${schemaNode.connectionId}-db-${schemaNode.database}-schema-${schemaNode.schemaName}-tables`,
+      label: '表',
+      type: 'table_folder',
+      connectionId: schemaNode.connectionId,
+      database: schemaNode.database,
+      schema: schemaNode.schemaName
+    }
+  ]
+}
+
+/**
+ * 加载数据库列表
+ */
+const loadDatabases = async (connectionId) => {
   try {
-    const response = await axios.get('/admin/featuredbadmin/tables', {
-      params: { connection_id: node.connectionId }
+    const response = await axios.get('/admin/featuredbadmin/databases', {
+      params: { connection_id: connectionId }
     })
 
-    if (response.data.data) {
-      // 找到表节点
-      const tablesNode = connectionsTree.value
-        .find(n => n.id === `conn-${node.connectionId}`)
-        ?.children.find(n => n.type === 'folder' && n.label === '表')
+    if (response.data.success && response.data.data) {
+      return response.data.data.map(db => ({
+        id: `conn-${connectionId}-db-${db}`,
+        label: db,
+        type: 'database',
+        connectionId: connectionId,
+        databaseName: db
+      }))
+    }
+    return []
+  } catch (error) {
+    console.error('加载数据库失败:', error)
+    return []
+  }
+}
 
-      if (tablesNode) {
-        tablesNode.children = response.data.data.map(table => ({
-          id: `table-${node.connectionId}-${table}`,
-          label: table,
-          type: 'table',
-          connectionId: node.connectionId,
-          tableName: table
-        }))
+/**
+ * 加载模式列表
+ */
+const loadSchemas = async (connectionId, database) => {
+  try {
+    const response = await axios.get('/admin/featuredbadmin/schemas', {
+      params: {
+        connection_id: connectionId,
+        database: database
       }
+    })
+
+    if (response.data.success && response.data.data) {
+      return response.data.data.map(schema => ({
+        id: `conn-${connectionId}-db-${database}-schema-${schema}`,
+        label: schema,
+        type: 'schema',
+        connectionId: connectionId,
+        database: database,
+        schemaName: schema
+      }))
+    }
+    return []
+  } catch (error) {
+    console.error('加载模式失败:', error)
+    return []
+  }
+}
+
+/**
+ * 加载表列表
+ */
+const loadTables = async (parentNode) => {
+  try {
+    const params = {
+      connection_id: parentNode.connectionId
     }
 
-    ElMessage.success('刷新成功')
+    // 根据节点类型添加参数
+    if (parentNode.database) {
+      params.database = parentNode.database
+    }
+    if (parentNode.schema) {
+      params.schema = parentNode.schema
+    }
+
+    const response = await axios.get('/admin/featuredbadmin/tables', {
+      params: params
+    })
+
+    if (response.data.success && response.data.data) {
+      return response.data.data.map(table => ({
+        id: `table-${parentNode.connectionId}-${table}`,
+        label: table,
+        type: 'table',
+        connectionId: parentNode.connectionId,
+        tableName: table,
+        database: parentNode.database || null,
+        schema: parentNode.schema || null
+      }))
+    }
+    return []
   } catch (error) {
-    console.error('刷新失败:', error)
-    ElMessage.error('刷新失败')
+    console.error('加载表失败:', error)
+    return []
   }
+}
+
+/**
+ * 刷新连接（重新加载子节点）
+ */
+const refreshConnection = async (data, node) => {
+  // 重新加载子节点
+  node.loaded = false
+  node.loading = false
+  node.childNodes = []
+  node.expand()
+  ElMessage.success('刷新成功')
 }
 
 // ==================== 节点点击处理 ====================
@@ -328,66 +628,122 @@ const refreshConnection = async (node) => {
  * 处理节点点击
  */
 const handleNodeClick = (data, node) => {
-  // 连接节点：刷新
-  if (data.type === 'connection') {
-    refreshConnection(data)
+  // SQL 执行节点：打开 SQL 编辑器
+  if (data.type === 'sql') {
+    openQueryTool(data)
   }
   // 表节点：打开数据浏览
   else if (data.type === 'table') {
     openTableData(data)
+  }
+  // 表文件夹节点：打开表列表
+  else if (data.type === 'table_folder') {
+    openTableList(data)
   }
 }
 
 // ==================== Tab 页签管理 ====================
 
 /**
- * 打开数据浏览 Tab
+ * 打开 SQL 编辑器 Tab（通过路由跳转）
  */
-const openTableData = (data) => {
-  const tabId = `data-${data.connectionId}-${data.tableName}`
-  const tabTitle = `数据: ${data.tableName}`
+const openQueryTool = (data) => {
+  const connectionName = connectionNames.value[data.connectionId] || `连接${data.connectionId}`
+  let path = `/query/${data.connectionId}`
 
-  // 检查是否已打开
-  const existingTab = openTabs.value.find(tab => tab.id === tabId)
-  if (existingTab) {
-    activeTab.value = tabId
-    return
+  // 构建查询参数
+  const query = {}
+  if (data.database) query.database = data.database
+  if (data.schema) query.schema = data.schema
+
+  const existingTab = openTabs.value.find(tab => tab.path === path)
+  if (!existingTab) {
+    openTabs.value.push({
+      path: path,
+      title: `${connectionName} - SQL编辑器`,
+      icon: 'Search',
+      closable: true
+    })
   }
 
-  // 添加新 Tab
-  openTabs.value.push({
-    id: tabId,
-    title: tabTitle,
-    icon: 'DataLine',
-    connectionId: data.connectionId,
-    tableName: data.tableName,
-    closable: true
-  })
+  router.push({ path, query })
+}
 
-  activeTab.value = tabId
+/**
+ * 打开表列表 Tab（通过路由跳转）
+ */
+const openTableList = (data) => {
+  const connectionName = connectionNames.value[data.connectionId] || `连接${data.connectionId}`
+  let path = `/tables/${data.connectionId}`
+
+  // 构建查询参数
+  const query = {}
+  if (data.database) query.database = data.database
+  if (data.schema) query.schema = data.schema
+
+  const existingTab = openTabs.value.find(tab => tab.path === path)
+  if (!existingTab) {
+    openTabs.value.push({
+      path: path,
+      title: `${connectionName} - 表列表`,
+      icon: 'Grid',
+      closable: true
+    })
+  }
+
+  router.push({ path, query })
+}
+
+/**
+ * 打开数据浏览 Tab（通过路由跳转）
+ */
+const openTableData = (data) => {
+  const connectionName = connectionNames.value[data.connectionId] || `连接${data.connectionId}`
+  let path = `/data/${data.connectionId}/${data.tableName}`
+
+  // 构建查询参数
+  const query = {}
+  if (data.database) query.database = data.database
+  if (data.schema) query.schema = data.schema
+
+  const existingTab = openTabs.value.find(tab => tab.path === path)
+  if (!existingTab) {
+    openTabs.value.push({
+      path: path,
+      title: `${connectionName} - ${data.tableName}`,
+      icon: 'DataLine',
+      closable: true
+    })
+  }
+
+  router.push({ path, query })
+}
+
+/**
+ * Tab 点击切换
+ */
+const handleTabClick = (tab) => {
+  const path = tab.paneName
+  if (path && route.path !== path) {
+    router.push(path)
+  }
 }
 
 /**
  * 关闭 Tab
  */
-const closeTab = (tabId) => {
-  const index = openTabs.value.findIndex(tab => tab.id === tabId)
+const closeTab = (path) => {
+  const index = openTabs.value.findIndex(tab => tab.path === path)
   if (index > -1 && openTabs.value[index].closable) {
     openTabs.value.splice(index, 1)
 
     // 如果关闭的是当前 Tab，切换到前一个
-    if (activeTab.value === tabId && openTabs.value.length > 0) {
+    if (activeTab.value === path && openTabs.value.length > 0) {
       const newIndex = Math.min(index, openTabs.value.length - 1)
-      activeTab.value = openTabs.value[newIndex].id
+      const newPath = openTabs.value[newIndex].path
+      router.push(newPath)
     }
   }
-}
-
-/**
- * Tab 点击
- */
-const handleTabClick = (tab) => {
-  activeTab.value = tab.paneName
 }
 
 // ==================== 连接管理 ====================
@@ -402,20 +758,12 @@ const openAddConnectionDialog = () => {
 }
 
 /**
- * 编辑连接
- */
-const editConnection = (data) => {
-  connectionDialog.visible = true
-  connectionDialog.isEdit = true
-  connectionDialog.data = data
-}
-
-/**
  * 保存连接
  */
 const handleSaveConnection = () => {
   connectionDialog.visible = false
-  loadConnections()
+  // 触发树的根节点重新加载
+  location.reload()
 }
 
 // ==================== 调整面板大小 ====================
@@ -441,7 +789,6 @@ const handleResize = (e) => {
   const diff = e.clientX - resizing.startX
   const newWidth = resizing.startWidth + diff
 
-  // 限制最小和最大宽度
   leftPanelWidth.value = Math.min(Math.max(newWidth, 200), 500)
 }
 
@@ -531,7 +878,6 @@ const stopResize = () => {
   display: flex;
 }
 
-/* 调整大小手柄 */
 .resize-handle {
   position: absolute;
   right: 0;
@@ -555,10 +901,12 @@ const stopResize = () => {
   overflow: hidden;
 }
 
-/* Tab 页签栏 */
 .tabs-header {
   background: #fff;
   border-bottom: 1px solid #e0e0e0;
+  min-height: 48px;
+  padding: 8px 12px;
+  flex-shrink: 0;
 }
 
 .tab-label {
@@ -571,43 +919,10 @@ const stopResize = () => {
   font-size: 14px;
 }
 
-/* Tab 内容区 */
 .tabs-content {
   flex: 1;
   overflow: hidden;
   background: #fff;
-}
-
-.tab-content {
-  height: 100%;
-  overflow: auto;
-}
-
-/* 欢迎页 */
-.welcome-page {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.welcome-content {
-  text-align: center;
-  color: #666;
-}
-
-.welcome-content h2 {
-  margin-top: 20px;
-  color: #333;
-}
-
-.welcome-content p {
-  margin-top: 10px;
-  font-size: 14px;
-}
-
-.quick-actions {
-  margin-top: 30px;
 }
 
 /* ==================== Element Plus 样式覆盖 ==================== */
@@ -624,28 +939,73 @@ const stopResize = () => {
   background: #e6f7ff;
 }
 
-:deep(.el-tabs--card > .el-tabs__header) {
+/* ==================== Tab 多行布局 ==================== */
+:deep(.el-tabs) {
+  display: flex;
+  flex-direction: column;
+  height: auto !important;
+}
+
+:deep(.el-tabs__header) {
   margin: 0;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-:deep(.el-tabs--card > .el-tabs__header .el-tabs__nav) {
+  padding: 0;
   border: none;
+  height: auto !important;
 }
 
-:deep(.el-tabs--card > .el-tabs__header .el-tabs__item) {
-  border: none;
-  border-right: 1px solid #e0e0e0;
-  height: 36px;
-  line-height: 36px;
+:deep(.el-tabs__nav-wrap) {
+  overflow: visible !important;
+  height: auto !important;
 }
 
-:deep(.el-tabs--card > .el-tabs__header .el-tabs__item.is-active) {
+:deep(.el-tabs__nav-scroll) {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+:deep(.el-tabs__nav) {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 4px 8px;
+  border: none !important;
+  height: auto !important;
+}
+
+:deep(.el-tabs__active-bar) {
+  display: none !important;
+}
+
+:deep(.el-tabs__item) {
+  border: 1px solid #d9d9d9;
+  height: 32px;
+  line-height: 30px;
+  padding: 0 12px;
+  border-radius: 3px;
+  margin: 0;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+:deep(.el-tabs__item:hover) {
   background: #f5f5f5;
-  border-bottom: 2px solid #409eff;
+  border-color: #409eff;
+  color: #409eff;
 }
 
-:deep(.el-tabs__content) {
-  display: none; /* 隐藏默认内容，使用自定义内容区 */
+:deep(.el-tabs__item.is-active) {
+  background: #e6f7ff;
+  border-color: #409eff;
+  color: #409eff;
+  font-weight: 500;
+}
+
+:deep(.el-tabs__item .el-icon-close) {
+  margin-left: 6px;
+  font-size: 12px;
+}
+
+:deep(.el-tabs__item .el-icon-close:hover) {
+  color: #f56c6c;
 }
 </style>

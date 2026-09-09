@@ -68,7 +68,7 @@ import axios from 'axios'
 
 const props = defineProps({
   connectionId: {
-    type: Number,
+    type: [String, Number],
     required: true
   },
   tableName: {
@@ -93,7 +93,7 @@ const loadStructure = async () => {
       params: { connection_id: props.connectionId }
     })
 
-    if (response.data.data) {
+    if (response.data.success && response.data.data) {
       const data = response.data.data
       structure.value = {
         columns: data.columns || [],

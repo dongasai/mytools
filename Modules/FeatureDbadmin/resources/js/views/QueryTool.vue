@@ -109,6 +109,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   VideoPlay,
@@ -118,9 +119,11 @@ import {
 } from '@element-plus/icons-vue'
 import axios from 'axios'
 
+const route = useRoute()
+
 const props = defineProps({
   connectionId: {
-    type: Number,
+    type: [String, Number],
     required: true
   }
 })
@@ -201,10 +204,16 @@ const executeQuery = async () => {
   const startTime = Date.now()
 
   try {
-    const response = await axios.post('/admin/featuredbadmin/query/execute', {
+    const payload = {
       connection_id: props.connectionId,
       sql: sql
-    })
+    }
+
+    // 从查询参数中读取 database 和 schema
+    if (route.query.database) payload.database = route.query.database
+    if (route.query.schema) payload.schema = route.query.schema
+
+    const response = await axios.post('/admin/featuredbadmin/query/execute', payload)
 
     const endTime = Date.now()
 

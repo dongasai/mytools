@@ -59,19 +59,8 @@
           :sortable="col.sortable ? 'custom' : false"
           min-width="120"
         >
-          <template #default="{ row, $index }">
-            <div
-              v-if="editingCell.row === $index && editingCell.col === col.name"
-              class="cell-editor"
-            >
-              <el-input
-                v-model="editingCell.value"
-                size="small"
-                @blur="saveCellEdit"
-                @keyup.enter="saveCellEdit"
-              />
-            </div>
-            <div v-else class="cell-content">
+          <template #default="{ row }">
+            <div class="cell-content">
               <template v-if="col.type === 'json'">
                 <el-tag size="small" type="info">JSON</el-tag>
               </template>
@@ -85,8 +74,9 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="120" fixed="right">
+        <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
+            <el-button type="info" size="small" text @click="viewRow(row)">详情</el-button>
             <el-button type="primary" size="small" text @click="editRow(row)">编辑</el-button>
             <el-button type="danger" size="small" text @click="deleteRow(row)">删除</el-button>
           </template>
@@ -109,44 +99,111 @@
       </div>
     </div>
 
-    <!-- 新增/编辑对话框 -->
+    <!-- 单元格编辑弹窗 -->
     <el-dialog
-      v-model="editDialog.visible"
-      :title="editDialog.isEdit ? '编辑数据' : '新增数据'"
-      width="60%"
+      v-model="cellEditDialog.visible"
+      :title="cellEditDialog.fullscreen ? '编辑字段 (最大化)' : '编辑字段'"
+      :fullscreen="cellEditDialog.fullscreen"
+      :width="cellEditDialog.fullscreen ? '100%' : '700px'"
+      @close="closeCellEditDialog"
     >
-      <el-form :model="editDialog.form" label-width="120px">
-        <el-form-item
-          v-for="col in editableColumns"
-          :key="col.name"
-          :label="col.name"
-          :prop="col.name"
-        >
-          <el-input
-            v-if="col.type === 'textarea' || col.type === 'text' || col.type === 'longtext'"
-            v-model="editDialog.form[col.name]"
-            type="textarea"
-            :rows="3"
-          />
-          <el-select
-            v-else-if="col.type === 'enum' || col.type === 'set'"
-            v-model="editDialog.form[col.name]"
-            style="width: 100%"
+      <!-- 标题栏自定义按钮 -->
+      <template #header="{ close, titleId, titleClass }">
+        <div class="dialog-header">
+          <span :id="titleId" :class="titleClass">编辑字段</span>
+          <el-button
+            type="text"
+            @click="toggleFullscreen"
+            class="fullscreen-btn"
           >
-            <el-option
-              v-for="opt in col.options"
-              :key="opt"
-              :label="opt"
-              :value="opt"
-            />
-          </el-select>
-          <el-input v-else v-model="editDialog.form[col.name]" />
+            <el-icon>
+              <FullScreen v-if="!cellEditDialog.fullscreen" />
+              <Close v-else />
+            </el-icon>
+            {{ cellEditDialog.fullscreen ? '还原' : '最大化' }}
+          </el-button>
+        </div>
+      </template>
+
+      <el-form label-width="100px">
+        <el-form-item label="字段名">
+          <el-input :model-value="cellEditDialog.colName" disabled />
+        </el-form-item>
+
+        <el-form-item label="字段类型">
+          <el-tag size="small">{{ cellEditDialog.colType }}</el-tag>
+          <el-tag v-if="cellEditDialog.nullable" size="small" type="warning" style="margin-left: 8px">可空</el-tag>
+        </el-form-item>
+
+        <el-form-item label="值">
+          <!-- 可空字段：支持设置 NULL -->
+          <div class="edit-field-container">
+            <!-- 布尔类型 -->
+            <template v-if="cellEditDialog.colType === 'boolean'">
+              <el-switch
+                v-model="cellEditDialog.newValue"
+                active-text="是"
+                inactive-text="否"
+              />
+            </template>
+
+            <!-- 文本类型 -->
+            <template v-else-if="isTextType(cellEditDialog.colType)">
+              <el-input
+                v-model="cellEditDialog.newValue"
+                type="textarea"
+                :rows="cellEditDialog.fullscreen ? 20 : 5"
+                placeholder="请输入值"
+              />
+            </template>
+
+            <!-- 数字类型 -->
+            <template v-else-if="isNumberType(cellEditDialog.colType)">
+              <el-input-number
+                v-model="cellEditDialog.newValue"
+                style="width: 100%"
+                placeholder="请输入值"
+              />
+            </template>
+
+            <!-- 默认输入框 -->
+            <template v-else>
+              <el-input
+                v-model="cellEditDialog.newValue"
+                :type="cellEditDialog.fullscreen ? 'textarea' : 'text'"
+                :rows="cellEditDialog.fullscreen ? 10 : 1"
+                placeholder="请输入值"
+                clearable
+              />
+            </template>
+
+            <!-- 操作按钮 -->
+            <div class="field-actions">
+              <!-- 可空字段的"设为 null"按钮 -->
+              <el-button
+                v-if="cellEditDialog.nullable"
+                size="small"
+                :type="cellEditDialog.newValue === null ? 'warning' : 'default'"
+                @click="setCellToNull"
+              >
+                {{ cellEditDialog.newValue === null ? '已设为 null' : '设为 null' }}
+              </el-button>
+
+              <!-- 重置按钮 -->
+              <el-button
+                size="small"
+                @click="resetValue"
+              >
+                重置为原值
+              </el-button>
+            </div>
+          </div>
         </el-form-item>
       </el-form>
 
       <template #footer>
-        <el-button @click="editDialog.visible = false">取消</el-button>
-        <el-button type="primary" @click="saveData">保存</el-button>
+        <el-button @click="closeCellEditDialog">取消</el-button>
+        <el-button type="primary" @click="saveCellEdit" :loading="cellEditDialog.saving">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -154,13 +211,17 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Download, Refresh, Search } from '@element-plus/icons-vue'
+import { Plus, Download, Refresh, Search, FullScreen, Close } from '@element-plus/icons-vue'
 import axios from 'axios'
+
+const route = useRoute()
+const router = useRouter()
 
 const props = defineProps({
   connectionId: {
-    type: Number,
+    type: [String, Number],
     required: true
   },
   tableName: {
@@ -195,26 +256,17 @@ const sortParams = reactive({
   order: ''
 })
 
-/** 行内编辑状态 */
-const editingCell = reactive({
-  row: -1,
-  col: '',
-  value: ''
-})
-
-/** 编辑对话框状态 */
-const editDialog = reactive({
+/** 单元格编辑弹窗 */
+const cellEditDialog = reactive({
   visible: false,
-  isEdit: false,
-  rowId: null,
-  form: {}
-})
-
-// ==================== 计算属性 ====================
-
-/** 可编辑的列（排除主键和自动更新字段） */
-const editableColumns = computed(() => {
-  return columns.value.filter(col => col.name !== 'id' && col.extra !== 'auto_increment')
+  row: null,
+  colName: '',
+  colType: '',
+  nullable: false,
+  oldValue: null,
+  newValue: null,
+  saving: false,
+  fullscreen: false
 })
 
 // ==================== 生命周期 ====================
@@ -224,10 +276,17 @@ onMounted(() => {
   loadData()
 })
 
+// 监听连接ID和表名变化
 watch(() => [props.connectionId, props.tableName], () => {
   loadTableColumns()
   loadData()
 })
+
+// 监听查询参数变化
+watch(() => route.query, () => {
+  loadTableColumns()
+  loadData()
+}, { deep: true })
 
 // ==================== 数据加载 ====================
 
@@ -238,13 +297,19 @@ const loadTableColumns = async () => {
   if (!props.tableName) return
 
   try {
+    const params = {
+      connection_id: props.connectionId
+    }
+
+    // 从查询参数中读取 database 和 schema
+    if (route.query.database) params.database = route.query.database
+    if (route.query.schema) params.schema = route.query.schema
+
     const response = await axios.get(`/admin/featuredbadmin/tables/${props.tableName}/structure`, {
-      params: {
-        connection_id: props.connectionId
-      }
+      params: params
     })
 
-    if (response.data.data) {
+    if (response.data.success && response.data.data) {
       columns.value = response.data.data.columns || []
     }
   } catch (error) {
@@ -269,10 +334,15 @@ const loadData = async () => {
       filter: filterText.value
     }
 
+    // 从查询参数中读取 database 和 schema
+    if (route.query.database) params.database = route.query.database
+    if (route.query.schema) params.schema = route.query.schema
+
     const response = await axios.get(`/admin/featuredbadmin/data/${props.tableName}`, { params })
-    if (response.data) {
-      tableData.value = response.data.data || []
-      total.value = response.data.total || 0
+
+    if (response.data.success && response.data.data) {
+      tableData.value = response.data.data.data || []
+      total.value = response.data.data.total || 0
     }
   } catch (error) {
     console.error('加载数据失败:', error)
@@ -332,107 +402,162 @@ const clearFilter = () => {
 }
 
 /**
- * 双击单元格进入编辑模式
+ * 双击单元格打开编辑弹窗
  */
 const handleCellDblclick = (row, column, cell, event) => {
   const colName = column.property
   if (!colName) return
 
   const colInfo = columns.value.find(c => c.name === colName)
-  if (colInfo && (colInfo.key === 'PRI' || colInfo.extra === 'auto_increment')) {
-    return // 主键和自增字段不允许编辑
+  if (!colInfo) return
+
+  // 主键和自增字段不允许编辑
+  if (colInfo.key === 'PRI' || colInfo.extra === 'auto_increment') {
+    ElMessage.warning('主键和自增字段不允许编辑')
+    return
   }
 
-  const rowIndex = tableData.value.indexOf(row)
-  editingCell.row = rowIndex
-  editingCell.col = colName
-  editingCell.value = row[colName] || ''
+  // 打开编辑弹窗
+  cellEditDialog.visible = true
+  cellEditDialog.row = row
+  cellEditDialog.colName = colName
+  cellEditDialog.colType = colInfo.type
+  cellEditDialog.nullable = colInfo.nullable === 'YES'
+  cellEditDialog.oldValue = row[colName]
+  cellEditDialog.newValue = row[colName]
+  cellEditDialog.saving = false
+}
+
+/**
+ * 关闭单元格编辑弹窗
+ */
+const closeCellEditDialog = () => {
+  cellEditDialog.visible = false
+  cellEditDialog.row = null
+  cellEditDialog.colName = ''
+  cellEditDialog.colType = ''
+  cellEditDialog.nullable = false
+  cellEditDialog.oldValue = null
+  cellEditDialog.newValue = null
+  cellEditDialog.saving = false
+  cellEditDialog.fullscreen = false
+}
+
+/**
+ * 切换全屏模式
+ */
+const toggleFullscreen = () => {
+  cellEditDialog.fullscreen = !cellEditDialog.fullscreen
+}
+
+/**
+ * 设置单元格值为 null
+ */
+const setCellToNull = () => {
+  cellEditDialog.newValue = null
+}
+
+/**
+ * 重置为原始值
+ */
+const resetValue = () => {
+  cellEditDialog.newValue = cellEditDialog.oldValue
 }
 
 /**
  * 保存单元格编辑
  */
 const saveCellEdit = async () => {
-  if (editingCell.row < 0 || !editingCell.col) return
+  if (!cellEditDialog.row || !cellEditDialog.colName) return
 
-  const row = tableData.value[editingCell.row]
-  const oldValue = row[editingCell.col]
-
-  if (oldValue !== editingCell.value) {
-    // 更新数据
-    row[editingCell.col] = editingCell.value
-
-    try {
-      await axios.put(`/admin/featuredbadmin/data/${props.tableName}/row/${row.id}`, {
-        connection_id: props.connectionId,
-        data: { [editingCell.col]: editingCell.value }
-      })
-      ElMessage.success('更新成功')
-    } catch (error) {
-      console.error('更新失败:', error)
-      ElMessage.error('更新失败')
-      // 恢复原值
-      row[editingCell.col] = oldValue
-    }
+  // 检查值是否改变
+  if (cellEditDialog.oldValue === cellEditDialog.newValue) {
+    ElMessage.info('值未改变，无需保存')
+    closeCellEditDialog()
+    return
   }
 
-  editingCell.row = -1
-  editingCell.col = ''
-  editingCell.value = ''
-}
+  cellEditDialog.saving = true
 
-/**
- * 打开新增对话框
- */
-const openAddDialog = () => {
-  editDialog.isEdit = false
-  editDialog.rowId = null
-  editDialog.form = {}
-  editableColumns.value.forEach(col => {
-    editDialog.form[col.name] = col.default || ''
-  })
-  editDialog.visible = true
-}
-
-/**
- * 编辑行
- */
-const editRow = (row) => {
-  editDialog.isEdit = true
-  editDialog.rowId = row.id
-  editDialog.form = { ...row }
-  editDialog.visible = true
-}
-
-/**
- * 保存数据
- */
-const saveData = async () => {
   try {
-    const url = editDialog.isEdit
-      ? `/admin/featuredbadmin/data/${props.tableName}/row/${editDialog.rowId}`
-      : `/admin/featuredbadmin/data/${props.tableName}/row`
-
     const params = {
       connection_id: props.connectionId,
-      data: editDialog.form
+      database: route.query.database || null,
+      schema: route.query.schema || null
     }
 
-    const response = editDialog.isEdit
-      ? await axios.put(url, params)
-      : await axios.post(url, params)
+    // 使用 _pk 字段（后端返回的主键值）
+    const pk = cellEditDialog.row._pk || cellEditDialog.row.id
 
-    if (response.data.success) {
-      ElMessage.success(editDialog.isEdit ? '更新成功' : '新增成功')
-      editDialog.visible = false
-      loadData()
-    } else {
-      ElMessage.error(response.data.message || '操作失败')
-    }
+    // 准备提交数据，处理布尔类型
+    const submitValue = cellEditDialog.colType === 'boolean'
+      ? (cellEditDialog.newValue === null ? null : (cellEditDialog.newValue ? 1 : 0))
+      : cellEditDialog.newValue
+
+    await axios.put(`/admin/featuredbadmin/data/${props.tableName}/row/${pk}`, {
+      connection_id: props.connectionId,
+      data: { [cellEditDialog.colName]: submitValue },
+      database: route.query.database || null,
+      schema: route.query.schema || null
+    })
+
+    // 更新表格数据
+    cellEditDialog.row[cellEditDialog.colName] = cellEditDialog.newValue
+
+    ElMessage.success('更新成功')
+    closeCellEditDialog()
   } catch (error) {
-    console.error('保存失败:', error)
-    ElMessage.error('保存失败')
+    console.error('更新失败:', error)
+    ElMessage.error(error.response?.data?.message || '更新失败')
+  } finally {
+    cellEditDialog.saving = false
   }
+}
+
+/**
+ * 打开新增 Tab
+ */
+const openAddDialog = () => {
+  const query = {}
+  if (route.query.database) query.database = route.query.database
+  if (route.query.schema) query.schema = route.query.schema
+
+  router.push({
+    path: `/data/${props.connectionId}/${props.tableName}/edit`,
+    query: query
+  })
+}
+
+/**
+ * 查看详情 - 打开新 Tab
+ */
+const viewRow = (row) => {
+  const query = {}
+  if (route.query.database) query.database = route.query.database
+  if (route.query.schema) query.schema = route.query.schema
+
+  // 使用 _pk 字段（后端返回的主键值）
+  const pk = row._pk || row.id
+  router.push({
+    path: `/data/${props.connectionId}/${props.tableName}/view/${pk}`,
+    query: query
+  })
+}
+
+/**
+ * 编辑行 - 打开新 Tab
+ */
+const editRow = (row) => {
+  const query = {}
+  if (route.query.database) query.database = route.query.database
+  if (route.query.schema) query.schema = route.query.schema
+
+  // 使用 _pk 字段（后端返回的主键值）
+  const pk = row._pk || row.id
+  router.push({
+    path: `/data/${props.connectionId}/${props.tableName}/edit/${pk}`,
+    query: query
+  })
 }
 
 /**
@@ -446,10 +571,18 @@ const deleteRow = async (row) => {
       type: 'warning'
     })
 
-    const response = await axios.delete(`/admin/featuredbadmin/data/${props.tableName}/row/${row.id}`, {
-      params: {
-        connection_id: props.connectionId
-      }
+    const params = {
+      connection_id: props.connectionId
+    }
+
+    // 从查询参数中读取 database 和 schema
+    if (route.query.database) params.database = route.query.database
+    if (route.query.schema) params.schema = route.query.schema
+
+    // 使用 _pk 字段（后端返回的主键值）
+    const pk = row._pk || row.id
+    const response = await axios.delete(`/admin/featuredbadmin/data/${props.tableName}/row/${pk}`, {
+      params: params
     })
 
     if (response.data.success) {
@@ -471,15 +604,21 @@ const deleteRow = async (row) => {
  */
 const exportData = async () => {
   try {
+    const params = {
+      connection_id: props.connectionId,
+      format: 'csv'
+    }
+
+    // 从查询参数中读取 database 和 schema
+    if (route.query.database) params.database = route.query.database
+    if (route.query.schema) params.schema = route.query.schema
+
     const response = await axios.get(`/admin/featuredbadmin/data/${props.tableName}/export`, {
-      params: {
-        connection_id: props.connectionId,
-        format: 'csv'
-      }
+      params: params
     })
 
-    if (response.data.data) {
-      const blob = new Blob([response.data.data], { type: 'text/csv' })
+    if (response.data.success && response.data.data) {
+      const blob = new Blob([response.data.data.data], { type: 'text/csv' })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
@@ -494,6 +633,20 @@ const exportData = async () => {
     console.error('导出失败:', error)
     ElMessage.error('导出失败')
   }
+}
+
+/**
+ * 判断是否为文本类型
+ */
+const isTextType = (type) => {
+  return ['text', 'longtext', 'mediumtext', 'blob', 'longblob'].includes(type)
+}
+
+/**
+ * 判断是否为数字类型
+ */
+const isNumberType = (type) => {
+  return ['int', 'bigint', 'smallint', 'tinyint', 'decimal', 'float', 'double'].includes(type)
 }
 
 /**
@@ -560,6 +713,33 @@ const formatCellValue = (value, type) => {
 .cell-content {
   min-height: 22px;
   cursor: pointer;
+}
+
+/* ==================== 编辑弹窗 ==================== */
+.edit-field-container {
+  width: 100%;
+}
+
+.field-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.fullscreen-btn {
+  font-size: 14px;
+  color: #606266;
+}
+
+.fullscreen-btn:hover {
+  color: #409eff;
 }
 
 /* ==================== 分页 ==================== */

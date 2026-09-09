@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
@@ -103,6 +103,7 @@ const emit = defineEmits(['save', 'cancel'])
 
 const formRef = ref(null)
 const testing = ref(false)
+const isInitializing = ref(false) // 标记是否正在初始化
 
 const form = reactive({
   name: '',
@@ -140,7 +141,9 @@ const rules = {
 /**
  * 初始化表单数据
  */
-const initForm = () => {
+const initForm = async () => {
+  isInitializing.value = true // 开始初始化
+
   if (props.connection) {
     Object.assign(form, {
       name: props.connection.name || '',
@@ -156,16 +159,28 @@ const initForm = () => {
       is_active: props.connection.is_active ?? true
     })
   }
+
+  // 使用 nextTick 确保 watch 触发后再重置标志
+  await nextTick()
+  isInitializing.value = false // 初始化完成
 }
 
 /**
  * 监听驱动变化，调整端口
+ *
+ * 只在用户主动改变驱动时才修改端口，初始化时不触发
  */
-watch(() => form.driver, (driver) => {
-  if (driver === 'mysql') {
-    form.port = 3306
-  } else if (driver === 'pgsql') {
-    form.port = 5432
+watch(() => form.driver, (newDriver, oldDriver) => {
+  // 初始化时不触发
+  if (isInitializing.value) return
+
+  // 只有在驱动类型实际改变时才修改端口
+  if (newDriver !== oldDriver && oldDriver !== undefined) {
+    if (newDriver === 'mysql') {
+      form.port = 3306
+    } else if (newDriver === 'pgsql') {
+      form.port = 5432
+    }
   }
 })
 

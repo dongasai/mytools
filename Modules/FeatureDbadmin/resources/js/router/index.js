@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import { Odometer, Link, Grid, DataAnalysis, Search } from '@element-plus/icons-vue';
+import { createRouter, createWebHashHistory } from 'vue-router'
+import { Coin, DataLine, Search, Grid } from '@element-plus/icons-vue'
 
 /**
  * FeatureDbadmin 路由配置
@@ -7,11 +7,11 @@ import { Odometer, Link, Grid, DataAnalysis, Search } from '@element-plus/icons-
 const routes = [
     {
         path: '/',
-        name: 'Dashboard',
-        component: () => import('../views/Dashboard.vue'),
+        name: 'Welcome',
+        component: () => import('../views/Welcome.vue'),
         meta: {
-            title: '仪表盘',
-            icon: Odometer,
+            title: '欢迎',
+            icon: Coin,
         },
     },
     {
@@ -20,54 +20,79 @@ const routes = [
         component: () => import('../views/ConnectionManager.vue'),
         meta: {
             title: '连接管理',
-            icon: Link,
+            icon: Coin,
         },
     },
     {
-        path: '/tables',
-        name: 'Tables',
-        component: () => import('../views/TableManager.vue'),
+        path: '/tables/:connectionId',
+        name: 'TableList',
+        component: () => import('../views/TableList.vue'),
         meta: {
-            title: '表管理',
+            title: '表列表',
             icon: Grid,
         },
+        props: true,
     },
     {
-        path: '/data',
+        path: '/data/:connectionId/:tableName',
         name: 'DataBrowser',
         component: () => import('../views/DataBrowser.vue'),
         meta: {
             title: '数据浏览',
-            icon: DataAnalysis,
+            icon: DataLine,
         },
+        props: true,
     },
     {
-        path: '/query',
+        path: '/data/:connectionId/:tableName/edit/:rowId?',
+        name: 'DataEditor',
+        component: () => import('../views/DataEditor.vue'),
+        meta: {
+            title: '数据编辑',
+            icon: DataLine,
+        },
+        props: true,
+    },
+    {
+        path: '/data/:connectionId/:tableName/view/:rowId',
+        name: 'DataViewer',
+        component: () => import('../views/DataViewer.vue'),
+        meta: {
+            title: '数据详情',
+            icon: DataLine,
+        },
+        props: true,
+    },
+    {
+        path: '/query/:connectionId',
         name: 'QueryTool',
         component: () => import('../views/QueryTool.vue'),
         meta: {
-            title: 'SQL查询工具',
+            title: 'SQL编辑器',
             icon: Search,
         },
+        props: true,
     },
-];
+    {
+        path: '/structure/:connectionId/:tableName',
+        name: 'TableStructure',
+        component: () => import('../views/TableStructure.vue'),
+        meta: {
+            title: '表结构',
+            icon: Grid,
+        },
+        props: true,
+    },
+]
 
 /**
  * 创建路由实例
+ *
+ * 使用 Hash 模式，base 为空（Vue 是独立系统）
  */
 const router = createRouter({
-    history: createWebHistory('/admin/featuredbadmin/'),
+    history: createWebHashHistory(),
     routes,
-});
+})
 
-/**
- * 路由守卫 - 更新页面标题
- */
-router.beforeEach((to, from, next) => {
-    const defaultTitle = 'FeatureDbadmin';
-    const pageTitle = to.meta?.title;
-    document.title = pageTitle ? `${pageTitle} - ${defaultTitle}` : defaultTitle;
-    next();
-});
-
-export default router;
+export default router
