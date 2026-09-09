@@ -483,11 +483,14 @@ const saveConnection = async () => {
 
     saving.value = true
     try {
-      const url = isEditing.value
-        ? `/admin/featuredbadmin/connections/${form.id}/update`
-        : '/admin/featuredbadmin/connections/create'
-
-      const res = await axios.post(url, form)
+      let res
+      if (isEditing.value) {
+        // 更新连接 - 使用 PUT 方法
+        res = await axios.put(`/admin/featuredbadmin/connections/${form.id}`, form)
+      } else {
+        // 创建连接 - 使用 POST 方法
+        res = await axios.post('/admin/featuredbadmin/connections', form)
+      }
 
       if (res.data.success) {
         ElMessage.success(isEditing.value ? '更新成功' : '创建成功')
@@ -556,7 +559,8 @@ const testBeforeSave = async () => {
  */
 const toggleConnectionStatus = async (conn) => {
   try {
-    const res = await axios.post(`/admin/featuredbadmin/connections/${conn.id}/toggle`, {
+    // 使用 PUT 方法更新连接状态
+    const res = await axios.put(`/admin/featuredbadmin/connections/${conn.id}`, {
       is_active: conn.is_active
     })
     if (res.data.success) {
@@ -583,7 +587,8 @@ const deleteConnection = async (id) => {
       type: 'warning'
     })
 
-    const res = await axios.post(`/admin/featuredbadmin/connections/${id}/delete`)
+    // 使用 DELETE 方法
+    const res = await axios.delete(`/admin/featuredbadmin/connections/${id}`)
     if (res.data.success) {
       ElMessage.success('连接删除成功')
       if (selectedConnection.value?.id === id) {

@@ -74,8 +74,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+
+/**
+ * Vue Router 实例
+ */
+const router = useRouter()
 
 /**
  * 统计数据
@@ -154,42 +160,45 @@ const getDurationClass = (duration) => {
  */
 const replayQuery = (row) => {
   ElMessage.info(`准备重放查询: ${row.sql.substring(0, 50)}...`)
-  window.location.href = `/admin/featuredbadmin/query?sql=${encodeURIComponent(row.sql)}`
+  router.push({
+    path: '/query',
+    query: { sql: row.sql }
+  })
 }
 
 /**
  * 查看全部查询
  */
 const viewAllQueries = () => {
-  window.location.href = '/admin/featuredbadmin/query-log'
+  router.push('/query')
 }
 
 /**
  * 跳转到连接管理
  */
 const goToConnections = () => {
-  window.location.href = '/admin/featuredbadmin/connections'
+  router.push('/connections')
 }
 
 /**
  * 跳转到SQL查询
  */
 const goToQuery = () => {
-  window.location.href = '/admin/featuredbadmin/query'
+  router.push('/query')
 }
 
 /**
  * 跳转到表结构管理
  */
 const goToTables = () => {
-  window.location.href = '/admin/featuredbadmin/tables'
+  router.push('/tables')
 }
 
 /**
  * 跳转到数据备份
  */
 const goToBackup = () => {
-  window.location.href = '/admin/featuredbadmin/backup'
+  router.push('/query')
 }
 
 // 组件挂载时获取数据
