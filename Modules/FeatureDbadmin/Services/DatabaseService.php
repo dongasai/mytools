@@ -77,21 +77,68 @@ class DatabaseService
      */
     public static function testConnectionConfig(array $config): array
     {
-        try {
-            // 构建临时连接配置
-            $tempConfig = [
-                'driver' => $config['driver'],
-                'host' => $config['host'] ?? '127.0.0.1',
-                'port' => $config['port'] ?? ($config['driver'] === 'mysql' ? 3306 : 5432),
-                'database' => $config['database'],
-                'username' => $config['username'] ?? '',
-                'password' => $config['password'] ?? '',
-                'charset' => $config['charset'] ?? 'utf8mb4',
+        // 校验 driver 参数
+        if (!isset($config['driver'])) {
+            return [
+                'success' => false,
+                'message' => '缺少 driver 参数',
+                'version' => null,
             ];
+        }
 
-            // 创建临时连接名称
-            $tempConnectionName = 'temp_test_' . uniqid();
+        // 校验 driver 合法性
+        $supportedDrivers = ['mysql', 'mariadb', 'pgsql', 'sqlite'];
+        if (!in_array($config['driver'], $supportedDrivers, true)) {
+            return [
+                'success' => false,
+                'message' => '不支持的数据库驱动: ' . $config['driver'],
+                'version' => null,
+            ];
+        }
 
+        // 根据驱动类型确定正确的字符集
+        $correctCharset = match ($config['driver']) {
+            'pgsql' => 'utf8',  // PostgreSQL 只支持 utf8
+            'mysql', 'mariadb' => $config['charset'] ?? 'utf8mb4',  // MySQL/MariaDB 使用用户指定的或默认 utf8mb4
+            'sqlite' => null,  // SQLite 不需要 charset
+            default => $config['charset'] ?? 'utf8mb4',
+        };
+
+        // 构建临时连接配置
+        $tempConfig = [
+            'driver' => $config['driver'],
+            'database' => $config['database'],
+        ];
+
+        // SQLite 不需要 host/port/username/password
+        if ($config['driver'] !== 'sqlite') {
+            $tempConfig['host'] = $config['host'] ?? '127.0.0.1';
+            // 修复 MariaDB 端口默认值：MySQL 和 MariaDB 都使用 3306
+            $tempConfig['port'] = $config['port'] ?? (in_array($config['driver'], ['mysql', 'mariadb'], true) ? 3306 : 5432);
+            $tempConfig['username'] = $config['username'] ?? '';
+            $tempConfig['password'] = $config['password'] ?? '';
+        }
+
+        // 只在需要字符集的驱动中添加
+        if ($correctCharset !== null) {
+            $tempConfig['charset'] = $correctCharset;
+        }
+
+        // MySQL/MariaDB 排序规则
+        if (in_array($config['driver'], ['mysql', 'mariadb'], true) && isset($config['collation'])) {
+            $tempConfig['collation'] = $config['collation'];
+        }
+
+        // PostgreSQL 特殊配置
+        if ($config['driver'] === 'pgsql') {
+            $tempConfig['schema'] = $config['schema'] ?? 'public';
+            $tempConfig['sslmode'] = $config['sslmode'] ?? 'prefer';
+        }
+
+        // 创建临时连接名称
+        $tempConnectionName = 'temp_test_' . uniqid();
+
+        try {
             // 动态添加连接配置
             Config::set("database.connections.{$tempConnectionName}", $tempConfig);
 
@@ -111,6 +158,9 @@ class DatabaseService
                 'version' => $version,
             ];
         } catch (\Exception $e) {
+            // 清理临时连接配置
+            DB::purge($tempConnectionName);
+
             return [
                 'success' => false,
                 'message' => '连接测试失败: ' . $e->getMessage(),

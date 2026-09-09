@@ -61,7 +61,27 @@ class DataBrowserController extends AdminController
             $filters
         );
 
-        return response()->json($result);
+        // 获取主键字段名，并添加到每行数据中
+        $connection = \Modules\FeatureDbadmin\Models\Connection::find($connectionId);
+        if ($connection) {
+            $connection->registerDynamicConnection();
+            $connectionName = $connection->getDynamicConnectionName();
+            $primaryKey = \Modules\FeatureDbadmin\Services\DataBrowserService::getPrimaryKeyNamePublic($connectionName, $tableName);
+
+            // 为每行数据添加 _pk 字段
+            foreach ($result['data'] as &$row) {
+                if (is_object($row)) {
+                    $row->_pk = $row->$primaryKey ?? null;
+                } elseif (is_array($row)) {
+                    $row['_pk'] = $row[$primaryKey] ?? null;
+                }
+            }
+            unset($row); // 解除引用
+
+            $result['_pk_field'] = $primaryKey;
+        }
+
+        return $this->success_json($result);
     }
 
     /**
@@ -69,10 +89,10 @@ class DataBrowserController extends AdminController
      *
      * @param Request $request
      * @param string $tableName
-     * @param int $id
+     * @param string|int $id 主键值（支持字符串主键）
      * @return \Illuminate\Http\JsonResponse
      */
-    public function row(Request $request, string $tableName, int $id)
+    public function row(Request $request, string $tableName, string|int $id)
     {
         $validated = $request->validate([
             'connection_id' => 'required|integer|min:1',
@@ -81,9 +101,7 @@ class DataBrowserController extends AdminController
         $connectionId = (int) $validated['connection_id'];
         $data = DataBrowserService::getRow($connectionId, $tableName, $id);
 
-        return response()->json([
-            'data' => $data,
-        ]);
+        return $this->success_json(['data' => $data]);
     }
 
     /**
@@ -103,21 +121,31 @@ class DataBrowserController extends AdminController
         $connectionId = (int) $validated['connection_id'];
         $data = $validated['data'];
 
-        $id = DataBrowserService::insertRow($connectionId, $tableName, $data);
+        try {
+            $result = DataBrowserService::insertRow($connectionId, $tableName, $data);
 
-        if ($id > 0) {
-            return response()->json([
-                'success' => true,
-                'message' => '数据新增成功',
-                'id' => $id,
-            ]);
+            // insertRow 返回值：
+            // - 0: 失败
+            // - 1: 成功（无自增主键）
+            // - >1: 成功（自增主键 ID）
+            if ($result > 0) {
+                $responseData = [];
+
+                // 如果返回的是真正的 ID（大于 1），才返回 id 字段
+                if ($result > 1) {
+                    $responseData['id'] = $result;
+                }
+
+                return $this->success_json($responseData, '数据新增成功');
+            }
+
+            return $this->error_json('数据新增失败');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // 解析数据库错误，返回友好提示
+            $errorMessage = $this->parseDatabaseError($e);
+
+            return $this->error_json($errorMessage, 422);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => '数据新增失败',
-            'id' => 0,
-        ]);
     }
 
     /**
@@ -125,10 +153,10 @@ class DataBrowserController extends AdminController
      *
      * @param Request $request
      * @param string $tableName
-     * @param int $id
+     * @param string|int $id 主键值（支持字符串主键）
      * @return \Illuminate\Http\JsonResponse
      */
-    public function modify(Request $request, string $tableName, int $id)
+    public function modify(Request $request, string $tableName, string|int $id)
     {
         $validated = $request->validate([
             'connection_id' => 'required|integer|min:1',
@@ -138,19 +166,20 @@ class DataBrowserController extends AdminController
         $connectionId = (int) $validated['connection_id'];
         $data = $validated['data'];
 
-        $success = DataBrowserService::updateRow($connectionId, $tableName, $id, $data);
+        try {
+            $success = DataBrowserService::updateRow($connectionId, $tableName, $id, $data);
 
-        if ($success) {
-            return response()->json([
-                'success' => true,
-                'message' => '数据更新成功',
-            ]);
+            if ($success) {
+                return $this->success_json(null, '数据更新成功');
+            }
+
+            return $this->error_json('数据更新失败');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // 解析数据库错误，返回友好提示
+            $errorMessage = $this->parseDatabaseError($e);
+
+            return $this->error_json($errorMessage, 422);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => '数据更新失败',
-        ]);
     }
 
     /**
@@ -158,10 +187,10 @@ class DataBrowserController extends AdminController
      *
      * @param Request $request
      * @param string $tableName
-     * @param int $id
+     * @param string|int $id 主键值（支持字符串主键）
      * @return \Illuminate\Http\JsonResponse
      */
-    public function delete(Request $request, string $tableName, int $id)
+    public function delete(Request $request, string $tableName, string|int $id)
     {
         $validated = $request->validate([
             'connection_id' => 'required|integer|min:1',
@@ -171,16 +200,10 @@ class DataBrowserController extends AdminController
         $success = DataBrowserService::deleteRow($connectionId, $tableName, $id);
 
         if ($success) {
-            return response()->json([
-                'success' => true,
-                'message' => '数据删除成功',
-            ]);
+            return $this->success_json(null, '数据删除成功');
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => '数据删除失败',
-        ]);
+        return $this->error_json('数据删除失败');
     }
 
     /**
@@ -218,9 +241,116 @@ class DataBrowserController extends AdminController
                 $content = '';
         }
 
-        return response()->json([
+        return $this->success_json([
             'data' => $content,
             'format' => $format,
         ]);
+    }
+
+    /**
+     * 解析数据库错误，返回友好的错误提示
+     *
+     * @param \Illuminate\Database\QueryException $e
+     * @return string
+     */
+    protected function parseDatabaseError(\Illuminate\Database\QueryException $e): string
+    {
+        $sqlState = $e->getCode();
+        $message = $e->getMessage();
+
+        // 提取字段名和值
+        $fieldName = null;
+        $fieldValue = null;
+
+        // PostgreSQL 错误格式："birth_date" 字段
+        if (preg_match('/"(\w+)"/', $message, $matches)) {
+            $fieldName = $matches[1];
+        }
+
+        // PostgreSQL 错误格式：parameter $10 = '...'
+        if (preg_match('/parameter \$\d+ = \'([^\']+)\'/', $message, $matches)) {
+            $fieldValue = $matches[1];
+        }
+
+        // 根据不同的错误类型返回友好提示
+        // PostgreSQL 错误代码
+        if (str_contains($message, 'Invalid datetime format') || str_contains($message, 'invalid input syntax for type date')) {
+            if ($fieldValue) {
+                $fieldHint = $fieldName ? "字段 '{$fieldName}' 的值 " : '';
+                return "日期格式错误：{$fieldHint}'{$fieldValue}' 不是有效的日期格式。请使用 YYYY-MM-DD 格式（如：2026-05-15）";
+            }
+            return '日期格式错误：请使用 YYYY-MM-DD 格式（如：2026-05-15）';
+        }
+
+        if (str_contains($message, 'invalid input syntax for type timestamp')) {
+            if ($fieldValue) {
+                $fieldHint = $fieldName ? "字段 '{$fieldName}' 的值 " : '';
+                return "时间戳格式错误：{$fieldHint}'{$fieldValue}' 不是有效的时间戳格式。请使用 YYYY-MM-DD HH:MM:SS 格式（如：2026-05-15 10:30:00）";
+            }
+            return '时间戳格式错误：请使用 YYYY-MM-DD HH:MM:SS 格式（如：2026-05-15 10:30:00）';
+        }
+
+        if (str_contains($message, 'invalid input syntax for type integer')) {
+            if ($fieldValue) {
+                $fieldHint = $fieldName ? "字段 '{$fieldName}' 的值 " : '';
+                return "整数格式错误：{$fieldHint}'{$fieldValue}' 不是有效的整数。请输入数字（如：123）";
+            }
+            return '整数格式错误：请输入有效的数字';
+        }
+
+        if (str_contains($message, 'invalid input syntax for type numeric') || str_contains($message, 'invalid input syntax for type decimal')) {
+            if ($fieldValue) {
+                $fieldHint = $fieldName ? "字段 '{$fieldName}' 的值 " : '';
+                return "数字格式错误：{$fieldHint}'{$fieldValue}' 不是有效的数字。请输入数字（如：88.50）";
+            }
+            return '数字格式错误：请输入有效的数字';
+        }
+
+        // MySQL 错误
+        if (str_contains($message, 'Incorrect date value')) {
+            return '日期格式错误：请使用 YYYY-MM-DD 格式（如：2026-05-15）';
+        }
+
+        if (str_contains($message, 'Incorrect datetime value')) {
+            return '日期时间格式错误：请使用 YYYY-MM-DD HH:MM:SS 格式（如：2026-05-15 10:30:00）';
+        }
+
+        if (str_contains($message, 'Incorrect integer value')) {
+            return '整数格式错误：请输入有效的整数';
+        }
+
+        if (str_contains($message, 'Incorrect decimal value')) {
+            return '数字格式错误：请输入有效的数字';
+        }
+
+        // 唯一键冲突
+        if (str_contains($message, 'Duplicate entry') || str_contains($message, 'unique constraint')) {
+            return '数据重复：该值已存在，请使用其他值';
+        }
+
+        // 外键约束错误
+        if (str_contains($message, 'foreign key constraint')) {
+            return '外键约束错误：关联的数据不存在';
+        }
+
+        // 字段长度超限
+        if (str_contains($message, 'Data too long') || str_contains($message, 'value too long')) {
+            return '数据长度超限：输入的数据超过了字段最大长度限制';
+        }
+
+        // 空值错误
+        if (str_contains($message, 'cannot be null') || str_contains($message, 'null value')) {
+            if ($fieldName) {
+                return "必填字段错误：字段 '{$fieldName}' 不能为空";
+            }
+            return '必填字段错误：某些必填字段未填写';
+        }
+
+        // 默认：返回简化后的错误信息
+        // 移除 SQL 语句和敏感信息
+        $cleanMessage = preg_replace('/\s+SQL:\s+\[.*/', '', $message);
+        $cleanMessage = preg_replace('/\(Connection:.*?\)/', '', $cleanMessage);
+
+        return '数据库错误：' . trim($cleanMessage);
     }
 }

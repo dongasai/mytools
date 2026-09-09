@@ -25,7 +25,7 @@ class ConnectionController extends AdminController
     {
         $connections = DatabaseService::getConnections(false);
 
-        return response()->json([
+        return $this->success_json([
             'data' => $connections,
             'total' => count($connections),
         ]);
@@ -54,11 +54,7 @@ class ConnectionController extends AdminController
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first(),
-                'data' => null,
-            ], 422);
+            return $this->error_json($validator->errors()->first(), 422);
         }
 
         $data = $validator->validated();
@@ -68,25 +64,7 @@ class ConnectionController extends AdminController
         // 创建连接
         $connection = Connection::create($data);
 
-        // 测试连接
-        $testResult = $connection->testConnection();
-
-        if (!$testResult['success']) {
-            // 测试失败，删除刚创建的连接
-            $connection->delete();
-
-            return response()->json([
-                'success' => false,
-                'message' => '连接测试失败: ' . $testResult['message'],
-                'data' => null,
-            ], 422);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => '连接创建成功',
-            'data' => $connection->toArray(),
-        ]);
+        return $this->success_json($connection->toArray(), '连接创建成功');
     }
 
     /**
@@ -101,11 +79,7 @@ class ConnectionController extends AdminController
         $connection = Connection::find($id);
 
         if (!$connection) {
-            return response()->json([
-                'success' => false,
-                'message' => '连接不存在',
-                'data' => null,
-            ], 404);
+            return $this->error_json('连接不存在', 404);
         }
 
         // 检查是否只是更新状态（只有 is_active 字段）
@@ -116,11 +90,7 @@ class ConnectionController extends AdminController
             // 只更新状态，不需要验证其他字段
             $connection->update(['is_active' => $input['is_active']]);
 
-            return response()->json([
-                'success' => true,
-                'message' => '连接状态已更新',
-                'data' => $connection->toArray(),
-            ]);
+            return $this->success_json($connection->toArray(), '连接状态已更新');
         }
 
         // 完整更新，需要验证所有字段
@@ -139,11 +109,7 @@ class ConnectionController extends AdminController
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first(),
-                'data' => null,
-            ], 422);
+            return $this->error_json($validator->errors()->first(), 422);
         }
 
         $data = $validator->validated();
@@ -151,25 +117,7 @@ class ConnectionController extends AdminController
         // 更新连接
         $connection->update($data);
 
-        // 刷新模型
-        $connection->refresh();
-
-        // 测试连接
-        $testResult = $connection->testConnection();
-
-        if (!$testResult['success']) {
-            return response()->json([
-                'success' => false,
-                'message' => '连接测试失败: ' . $testResult['message'],
-                'data' => $connection->toArray(),
-            ], 422);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => '连接更新成功',
-            'data' => $connection->toArray(),
-        ]);
+        return $this->success_json($connection->fresh()->toArray(), '连接更新成功');
     }
 
     /**
@@ -183,20 +131,12 @@ class ConnectionController extends AdminController
         $connection = Connection::find($id);
 
         if (!$connection) {
-            return response()->json([
-                'success' => false,
-                'message' => '连接不存在',
-                'data' => null,
-            ], 404);
+            return $this->error_json('连接不存在', 404);
         }
 
         $connection->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => '连接删除成功',
-            'data' => null,
-        ]);
+        return $this->success_json(null, '连接删除成功');
     }
 
     /**
@@ -209,7 +149,11 @@ class ConnectionController extends AdminController
     {
         $result = DatabaseService::testConnection($id);
 
-        return response()->json($result);
+        if ($result['success']) {
+            return $this->success_json($result);
+        } else {
+            return $this->error_json($result['message'] ?? '连接失败');
+        }
     }
 
     /**
@@ -231,10 +175,7 @@ class ConnectionController extends AdminController
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
+            return $this->error_json($validator->errors()->first(), 422);
         }
 
         $config = $validator->validated();
@@ -242,6 +183,10 @@ class ConnectionController extends AdminController
         // 测试连接配置
         $result = DatabaseService::testConnectionConfig($config);
 
-        return response()->json($result);
+        if ($result['success']) {
+            return $this->success_json($result);
+        } else {
+            return $this->error_json($result['message'] ?? '连接失败');
+        }
     }
 }

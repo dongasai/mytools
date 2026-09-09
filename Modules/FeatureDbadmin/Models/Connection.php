@@ -73,10 +73,10 @@ class Connection extends Model
 
     /**
      * 隐藏字段
+     *
+     * 注意：数据库管理工具中密码需要可见，用于编辑连接
      */
-    protected $hidden = [
-        'password',
-    ];
+    protected $hidden = [];
 
     // ==================== 访问器和修改器 ====================
 

@@ -30,7 +30,10 @@ Route::group([
     Route::post('connections/test-config', [Controllers\ConnectionController::class, 'testConfig']);
 
     // ===== 表管理 JSON API =====
+    Route::get('databases', [Controllers\TableController::class, 'databases']);
+    Route::get('schemas', [Controllers\TableController::class, 'schemas']);
     Route::get('tables', [Controllers\TableController::class, 'list']);
+    Route::post('test-table', [Controllers\TableController::class, 'createTestTable']);
     Route::get('tables/{name}/structure', [Controllers\TableController::class, 'structure']);
     Route::get('tables/{name}/export', [Controllers\TableController::class, 'export']);
 
